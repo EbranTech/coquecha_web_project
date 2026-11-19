@@ -1,0 +1,28 @@
+# Entornos y secretos
+.env
+.env.*
+!.env.example
+
+# Dependencias y compilados
+**/node_modules/
+**/vendor/
+**/.next/
+**/build/
+**/dist/
+
+# Laravel
+backend-laravel/storage/*.key
+backend-laravel/storage/logs/*
+!backend-laravel/storage/logs/.gitignore
+backend-laravel/bootstrap/cache/*
+!backend-laravel/bootstrap/cache/.gitignore
+
+# Docker y herramientas locales
+.docker/
+*.log
+
+# IDE y sistema operativo
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
