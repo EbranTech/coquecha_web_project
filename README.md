@@ -18,7 +18,7 @@ Desde la raíz del repositorio:
 docker compose -f infrastructure/docker-compose.yml up -d
 ```
 
-El panel Laravel está en `http://localhost:8080/login`. Para desarrollo, Vite de Laravel usa `http://localhost:5174`, React usa `5173` y Next.js usa `3000`.
+El panel Laravel está en `http://localhost:8080/login`. Para desarrollo, Vite de Laravel usa `http://localhost:5174`, React usa `5175` y Next.js usa `3000`.
 
 Cuenta demo de administración: `admin` / `password`.
 

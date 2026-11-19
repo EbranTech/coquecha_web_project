@@ -27,6 +27,14 @@
 - [x] Implementar CRUD de recursos mediante Livewire.
 - [x] Añadir Vite de Laravel al entorno Docker (`http://localhost:5174`).
 
+## Fase 3 — API operativa y React
+
+- [x] Exponer sectores activos y recursos autenticados en API v1.
+- [x] Añadir filtros de recursos por estado y tipo.
+- [x] Reemplazar la plantilla React por inicio de sesión y consulta de catálogos.
+- [x] Verificar contrato de API, pruebas aisladas y compilación de React.
+- [x] Cerrar la fase con commit y push.
+
 ## Próxima acción
 
-Comenzar la Fase 3: API operativa para sectores y recursos, consumida desde React.
+Comenzar la Fase 4: modelado y gestión de turnos de distribución.

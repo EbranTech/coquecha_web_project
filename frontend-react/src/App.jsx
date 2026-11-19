@@ -1,121 +1,46 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useState } from 'react'
+import { currentUser, login, logout, resources, sectors } from './api'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(null)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [resourceStatus, setResourceStatus] = useState('')
+  const [sectorList, setSectorList] = useState([])
+  const [resourceList, setResourceList] = useState([])
+
+  useEffect(() => {
+    currentUser().then(({ user: activeUser }) => setUser(activeUser)).catch(() => setUser(null)).finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    setLoading(true)
+    Promise.all([sectors(), resources({ status: resourceStatus })])
+      .then(([sectorResponse, resourceResponse]) => { setSectorList(sectorResponse.data); setResourceList(resourceResponse.data) })
+      .catch((requestError) => setError(requestError.message))
+      .finally(() => setLoading(false))
+  }, [user, resourceStatus])
+
+  async function handleLogin(event) {
+    event.preventDefault()
+    setLoading(true); setError('')
+    try { const response = await login(username, password); setUser(response.user); setPassword('') } catch (requestError) { setError(requestError.message) } finally { setLoading(false) }
+  }
+
+  async function handleLogout() {
+    await logout(); setUser(null); setSectorList([]); setResourceList([]); setResourceStatus('')
+  }
+
+  if (loading && !user) return <main className="page"><p>Cargando plataforma…</p></main>
+
+  if (!user) return <main className="page login-page"><section className="login-card"><p className="eyebrow">Coquechas</p><h1>Consulta comunitaria</h1><p className="intro">Consulta los sectores y recursos operativos de la comunidad.</p><form onSubmit={handleLogin}><label>Usuario<input value={username} onChange={(event) => setUsername(event.target.value)} required /></label><label>Contraseña<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <p className="error">{error}</p>}<button disabled={loading} type="submit">{loading ? 'Ingresando…' : 'Ingresar'}</button></form></section></main>
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <main className="page"><header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>{error && <p className="error">{error}</p>}<section className="summary"><article><strong>{sectorList.length}</strong><span>Sectores activos</span></article><article><strong>{resourceList.length}</strong><span>Recursos mostrados</span></article></section><section className="catalog"><div className="section-heading"><div><p className="eyebrow">Áreas atendidas</p><h2>Sectores activos</h2></div></div><div className="cards">{sectorList.map((sector) => <article className="card" key={sector.id}><h3>{sector.name}</h3><p>{sector.description || 'Sin descripción adicional.'}</p><small>{sector.location_description || 'Ubicación por definir'}</small></article>)}</div></section><section className="catalog"><div className="section-heading"><div><p className="eyebrow">Inventario</p><h2>Recursos</h2></div><label className="filter">Estado<select value={resourceStatus} onChange={(event) => setResourceStatus(event.target.value)}><option value="">Todos</option><option value="available">Disponibles</option><option value="maintenance">En mantenimiento</option><option value="inactive">Inactivos</option></select></label></div><div className="cards">{resourceList.map((resource) => <article className="card" key={resource.id}><span className={`badge ${resource.status}`}>{resource.status === 'available' ? 'Disponible' : resource.status === 'maintenance' ? 'Mantenimiento' : 'Inactivo'}</span><h3>{resource.name}</h3><p>{resource.resource_type} · {resource.location_description || 'Ubicación por definir'}</p><small>{resource.capacity ? `${resource.capacity} ${resource.capacity_unit || ''}` : 'Capacidad no registrada'}</small></article>)}</div>{!loading && !resourceList.length && <p className="empty">No hay recursos con este filtro.</p>}</section></main>
   )
 }
 
