@@ -15,7 +15,7 @@ class AuthApiTest extends TestCase
         $this->seed();
         $this->withoutMiddleware(ValidateCsrfToken::class);
 
-        $response = $this->withHeader('Origin', 'http://localhost:5173')->postJson('/api/v1/auth/login', [
+        $response = $this->withHeader('Origin', 'http://localhost:5175')->postJson('/api/v1/auth/login', [
             'username' => 'admin',
             'password' => 'password',
         ]);
