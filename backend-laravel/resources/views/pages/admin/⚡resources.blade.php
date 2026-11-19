@@ -68,7 +68,15 @@ new #[Title('Administrar recursos')] class extends Component
     public function delete(int $resourceId): void
     {
         $this->ensureAdmin();
-        WaterResource::query()->findOrFail($resourceId)->delete();
+        $resource = WaterResource::query()->findOrFail($resourceId);
+
+        if ($resource->shifts()->exists()) {
+            session()->flash('error', 'No se puede eliminar un recurso utilizado por turnos. Márcalo como inactivo para conservar el historial.');
+
+            return;
+        }
+
+        $resource->delete();
         session()->flash('success', 'Recurso eliminado.');
 
         if ($this->editingId === $resourceId) {
@@ -111,6 +119,9 @@ new #[Title('Administrar recursos')] class extends Component
 
         @if (session('success'))
             <p class="mt-5 rounded bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</p>
+        @endif
+        @if (session('error'))
+            <p class="mt-5 rounded bg-red-50 p-3 text-sm text-red-800">{{ session('error') }}</p>
         @endif
 
         <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">

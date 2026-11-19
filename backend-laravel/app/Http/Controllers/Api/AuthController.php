@@ -41,14 +41,14 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return response()->json(status: 204);
     }
 
-    /** @return array{id: int, username: string, name: string, role: string} */
+    /** @return array{id: int, username: string, name: string, role: string, sectors: array<int, array{id: int, name: string}>} */
     private function userPayload(User $user): array
     {
         return [
@@ -56,6 +56,11 @@ class AuthController extends Controller
             'username' => $user->username,
             'name' => $user->display_name,
             'role' => $user->role->name,
+            'sectors' => $user->managedSectors()
+                ->orderBy('name')
+                ->get(['sectors.id', 'sectors.name'])
+                ->map(fn ($sector): array => ['id' => $sector->id, 'name' => $sector->name])
+                ->all(),
         ];
     }
 }

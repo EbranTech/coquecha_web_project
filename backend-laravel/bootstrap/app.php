@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ShiftConflictException;
 use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,4 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        $exceptions->render(function (ShiftConflictException $exception, Request $request) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'code' => 'RESOURCE_TIME_CONFLICT',
+                'resource_ids' => $exception->resourceIds,
+            ], 409);
+        });
     })->create();

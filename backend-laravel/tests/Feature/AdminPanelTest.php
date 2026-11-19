@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\Sector;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminPanelTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_an_administrator_can_access_the_sector_panel(): void
     {
         $this->seed();
@@ -47,6 +50,24 @@ class AdminPanelTest extends TestCase
             'name' => 'Sector Norte',
             'status' => 'active',
         ]);
+    }
+
+    public function test_an_administrator_can_assign_a_coordinator_to_a_sector(): void
+    {
+        $this->seed();
+        $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $coordinator = User::query()->where('username', 'coordinador')->firstOrFail();
+
+        $this->actingAs($admin);
+
+        Livewire::test('pages::admin.sectors')
+            ->set('name', 'Sector con responsable')
+            ->set('status', 'active')
+            ->set('coordinatorIds', [$coordinator->id])
+            ->call('save');
+
+        $sector = Sector::query()->where('name', 'Sector con responsable')->firstOrFail();
+        $this->assertTrue($sector->responsibleUsers()->whereKey($coordinator->id)->exists());
     }
 
     public function test_an_administrator_can_create_a_resource(): void

@@ -11,15 +11,23 @@ function xsrfToken() {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(`${apiUrl}${path}`, {
-    credentials: 'include',
-    headers: { Accept: 'application/json', ...options.headers },
-    ...options,
-  })
+  let response
+
+  try {
+    response = await fetch(`${apiUrl}${path}`, {
+      credentials: 'include',
+      headers: { Accept: 'application/json', ...options.headers },
+      ...options,
+    })
+  } catch {
+    throw new Error('No fue posible comunicarse con el servidor. Verifica que Laravel esté activo en http://localhost:8080.')
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new Error(body.message ?? 'No fue posible completar la solicitud.')
+    const error = new Error(body.message ?? 'No fue posible completar la solicitud.')
+    error.code = body.code
+    throw error
   }
 
   return response.status === 204 ? null : response.json()
@@ -42,3 +50,38 @@ export const resources = (filters = {}) => {
   const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value))
   return request(`/resources${query.size ? `?${query}` : ''}`)
 }
+export const reports = () => request('/reports')
+export const createReport = (payload) => request('/reports', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+  body: JSON.stringify(payload),
+})
+export const uploadEvidences = (reportId, files) => {
+  const body = new FormData()
+  Array.from(files).forEach((file) => body.append('files[]', file))
+  return request(`/reports/${reportId}/evidences`, { method: 'POST', headers: { 'X-XSRF-TOKEN': xsrfToken() }, body })
+}
+export const addFollowup = (reportId, payload) => request(`/reports/${reportId}/followups`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+  body: JSON.stringify(payload),
+})
+export const shifts = (filters = {}) => {
+  const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value))
+  return request(`/shifts${query.size ? `?${query}` : ''}`)
+}
+export const createShift = (payload) => request('/shifts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+  body: JSON.stringify(payload),
+})
+export const updateShiftStatus = (shiftId, status) => request(`/shifts/${shiftId}/status`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+  body: JSON.stringify({ status }),
+})
+export const saveShiftResult = (shiftId, payload) => request(`/shifts/${shiftId}/result`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+  body: JSON.stringify(payload),
+})

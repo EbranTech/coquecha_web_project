@@ -27,8 +27,8 @@ class CatalogApiTest extends TestCase
 
         $this->getJson('/api/v1/sectors')
             ->assertOk()
-            ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.name', 'Sector activo');
+            ->assertJsonFragment(['name' => 'Sector activo'])
+            ->assertJsonMissing(['name' => 'Sector inactivo']);
     }
 
     public function test_an_authenticated_user_can_filter_resources_by_status_and_type(): void

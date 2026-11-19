@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model sectors {
+  id                    BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  name                  String                  @unique(map: "sectors_name_unique") @db.VarChar(120)
+  description           String?                 @db.Text
+  location_description  String?                 @db.VarChar(255)
+  status                sectors_status          @default(active)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  service_interruptions service_interruptions[]
+
+  @@index([status, name], map: "sectors_status_name_index")
+}
+
+model service_interruptions {
+  id                  BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  sector_id           BigInt    @db.UnsignedBigInt
+  report_id           BigInt?   @db.UnsignedBigInt
+  created_by_user_id  BigInt    @db.UnsignedBigInt
+  cause               String    @db.VarChar(150)
+  description         String?   @db.Text
+  affected_households Int?      @db.UnsignedInt
+  started_at          DateTime  @db.Timestamp(0)
+  restored_at         DateTime? @db.Timestamp(0)
+  created_at          DateTime? @db.Timestamp(0)
+  updated_at          DateTime? @db.Timestamp(0)
+  reports             reports?  @relation(fields: [report_id], references: [id], onUpdate: Restrict, map: "service_interruptions_report_id_foreign")
+  sectors             sectors   @relation(fields: [sector_id], references: [id], onUpdate: Restrict, map: "service_interruptions_sector_id_foreign")
+
+  @@index([created_by_user_id], map: "service_interruptions_created_by_user_id_foreign")
+  @@index([report_id], map: "service_interruptions_report_id_foreign")
+  @@index([sector_id, restored_at, started_at], map: "service_interruptions_sector_id_restored_at_started_at_index")
+}
+
+model reports {
+  id                    BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  sector_id             BigInt                  @db.UnsignedBigInt
+  created_by_user_id    BigInt                  @db.UnsignedBigInt
+  category              String                  @db.VarChar(80)
+  description           String                  @db.Text
+  priority              reports_priority        @default(normal)
+  status                reports_status          @default(pending)
+  resolved_at           DateTime?               @db.Timestamp(0)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  service_interruptions service_interruptions[]
+
+  @@index([created_by_user_id, status, created_at], map: "reports_created_by_user_id_status_created_at_index")
+  @@index([sector_id, status, created_at], map: "reports_sector_id_status_created_at_index")
+}
+
+model shift_results {
+  id                  BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  shift_id            BigInt    @unique(map: "shift_results_shift_id_unique") @db.UnsignedBigInt
+  delivered_volume    Decimal   @db.Decimal(12, 2)
+  volume_unit         String    @default("litros") @db.VarChar(30)
+  notes               String?   @db.Text
+  recorded_by_user_id BigInt    @db.UnsignedBigInt
+  created_at          DateTime? @db.Timestamp(0)
+  updated_at          DateTime? @db.Timestamp(0)
+  shift               shifts    @relation(fields: [shift_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([recorded_by_user_id], map: "shift_results_recorded_by_user_id_foreign")
+}
+
+model shifts {
+  id                  BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  sector_id           BigInt        @db.UnsignedBigInt
+  responsible_user_id BigInt?       @db.UnsignedBigInt
+  starts_at           DateTime      @db.DateTime(0)
+  ends_at             DateTime      @db.DateTime(0)
+  status              shifts_status @default(planned)
+  notes               String?       @db.Text
+  created_at          DateTime?     @db.Timestamp(0)
+  updated_at          DateTime?     @db.Timestamp(0)
+  result              shift_results?
+
+  @@index([responsible_user_id], map: "shifts_responsible_user_id_foreign")
+  @@index([sector_id, starts_at], map: "shifts_sector_id_starts_at_index")
+  @@index([status, starts_at, ends_at], map: "shifts_status_starts_at_ends_at_index")
+}
+
+enum sectors_status {
+  active
+  inactive
+}
+
+enum reports_priority {
+  low
+  normal
+  high
+  urgent
+}
+
+enum shifts_status {
+  planned
+  in_progress
+  completed
+  cancelled
+}
+
+enum reports_status {
+  pending
+  in_progress
+  resolved
+  closed
+}

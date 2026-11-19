@@ -22,4 +22,19 @@ class Sector extends Model
     {
         return $this->hasMany(Shift::class);
     }
+
+    public function responsibleUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'sector_responsibles')->withTimestamps();
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function serviceInterruptions(): HasMany
+    {
+        return $this->hasMany(ServiceInterruption::class);
+    }
 }

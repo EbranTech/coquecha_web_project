@@ -26,4 +26,6 @@ Cuenta demo de administración: `admin` / `password`.
 
 Las Fases 0, 1 y 2 están completadas. El avance y los siguientes pasos están documentados en [docs/PROGRESO.md](docs/PROGRESO.md).
 
+La arquitectura objetivo, la creación de cada recurso en la consola AWS, las configuraciones de seguridad y el procedimiento de actualización están documentados en [docs/DESPLIEGUE_AWS.md](docs/DESPLIEGUE_AWS.md).
+
 El plan completo de la solución se conserva en el directorio de trabajo padre como `PLAN_IMPLEMENTACION_COQUECHAS.md`; será incorporado a `docs/` antes de iniciar la implementación funcional.

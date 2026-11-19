@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -61,5 +62,20 @@ class User extends Authenticatable
     public function responsibleShifts(): HasMany
     {
         return $this->hasMany(Shift::class, 'responsible_user_id');
+    }
+
+    public function managedSectors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sector::class, 'sector_responsibles')->withTimestamps();
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'created_by_user_id');
+    }
+
+    public function serviceInterruptions(): HasMany
+    {
+        return $this->hasMany(ServiceInterruption::class, 'created_by_user_id');
     }
 }

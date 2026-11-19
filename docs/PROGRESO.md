@@ -44,6 +44,15 @@
 - [x] Crear el panel Livewire de turnos: programación, responsable, recursos y cambios de estado.
 - [x] Verificar la reserva válida y el rechazo de solapamientos mediante pruebas automatizadas.
 
+## Fase 5 — Operación, reportes e indicadores
+
+- [x] Exponer turnos en API v1 y mostrarlos en React.
+- [x] Registrar reportes, seguimientos y evidencias privadas en Moto/S3.
+- [x] Implementar interrupciones con Next.js + Prisma y control de sectores.
+- [x] Registrar volumen distribuido al completar un turno.
+- [x] Mostrar indicadores reales de operación en Next.js.
+- [x] Ejecutar una primera auditoría local de QA.
+
 ## Próxima acción
 
-Comenzar la Fase 5: exponer turnos en la API v1 y mostrarlos en React.
+Cerrar los pendientes de QA de [AUDITORIA_QA_LOCAL.md](AUDITORIA_QA_LOCAL.md), completar el recorrido manual por rol y preparar las imágenes/Compose de producción antes de AWS.

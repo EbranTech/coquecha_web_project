@@ -2,7 +2,9 @@
 
 use App\Models\Role;
 use App\Models\Sector;
+use App\Models\User;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -18,6 +20,9 @@ new #[Title('Administrar sectores')] class extends Component
 
     public string $status = 'active';
 
+    /** @var list<int> */
+    public array $coordinatorIds = [];
+
     public function save(): void
     {
         $this->ensureAdmin();
@@ -27,9 +32,23 @@ new #[Title('Administrar sectores')] class extends Component
             'description' => ['nullable', 'string', 'max:2000'],
             'location_description' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
+            'coordinatorIds' => ['array'],
+            'coordinatorIds.*' => ['integer', Rule::exists('user_accounts', 'id')],
         ]);
 
-        Sector::query()->updateOrCreate(['id' => $this->editingId], $data);
+        $coordinatorIds = array_map('intval', $data['coordinatorIds']);
+        $validCoordinators = User::query()
+            ->whereKey($coordinatorIds)
+            ->whereHas('role', fn ($query) => $query->where('name', Role::COORDINATOR))
+            ->count();
+
+        if ($validCoordinators !== count(array_unique($coordinatorIds))) {
+            throw ValidationException::withMessages(['coordinatorIds' => 'Solo se pueden asignar usuarios con rol de coordinador.']);
+        }
+
+        unset($data['coordinatorIds']);
+        $sector = Sector::query()->updateOrCreate(['id' => $this->editingId], $data);
+        $sector->responsibleUsers()->sync($coordinatorIds);
         session()->flash('success', $this->editingId ? 'Sector actualizado.' : 'Sector creado.');
         $this->resetForm();
     }
@@ -43,12 +62,21 @@ new #[Title('Administrar sectores')] class extends Component
         $this->description = $sector->description ?? '';
         $this->location_description = $sector->location_description ?? '';
         $this->status = $sector->status;
+        $this->coordinatorIds = $sector->responsibleUsers()->pluck('user_accounts.id')->all();
     }
 
     public function delete(int $sectorId): void
     {
         $this->ensureAdmin();
-        Sector::query()->findOrFail($sectorId)->delete();
+        $sector = Sector::query()->findOrFail($sectorId);
+
+        if ($sector->shifts()->exists() || $sector->reports()->exists() || $sector->serviceInterruptions()->exists()) {
+            session()->flash('error', 'No se puede eliminar un sector que tiene turnos, reportes o interrupciones. Márcalo como inactivo para conservar el historial.');
+
+            return;
+        }
+
+        $sector->delete();
         session()->flash('success', 'Sector eliminado.');
 
         if ($this->editingId === $sectorId) {
@@ -63,7 +91,7 @@ new #[Title('Administrar sectores')] class extends Component
 
     private function resetForm(): void
     {
-        $this->reset('editingId', 'name', 'description', 'location_description');
+        $this->reset('editingId', 'name', 'description', 'location_description', 'coordinatorIds');
         $this->status = 'active';
         $this->resetValidation();
     }
@@ -77,6 +105,7 @@ new #[Title('Administrar sectores')] class extends Component
     {
         return $this->view([
             'sectors' => Sector::query()->orderBy('name')->get(),
+            'coordinators' => User::query()->with('person')->where('is_active', true)->whereHas('role', fn ($query) => $query->where('name', Role::COORDINATOR))->orderBy('username')->get(),
         ]);
     }
 };
@@ -90,6 +119,9 @@ new #[Title('Administrar sectores')] class extends Component
 
         @if (session('success'))
             <p class="mt-5 rounded bg-emerald-50 p-3 text-sm text-emerald-800">{{ session('success') }}</p>
+        @endif
+        @if (session('error'))
+            <p class="mt-5 rounded bg-red-50 p-3 text-sm text-red-800">{{ session('error') }}</p>
         @endif
 
         <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
@@ -113,6 +145,7 @@ new #[Title('Administrar sectores')] class extends Component
             <div><label class="block text-sm font-medium">Descripción</label><textarea class="mt-1 w-full rounded border-slate-300" rows="3" wire:model="description"></textarea><p class="mt-1 text-sm text-red-600">@error('description') {{ $message }} @enderror</p></div>
             <div><label class="block text-sm font-medium">Ubicación</label><input class="mt-1 w-full rounded border-slate-300" wire:model="location_description"><p class="mt-1 text-sm text-red-600">@error('location_description') {{ $message }} @enderror</p></div>
             <div><label class="block text-sm font-medium">Estado</label><select class="mt-1 w-full rounded border-slate-300" wire:model="status"><option value="active">Activo</option><option value="inactive">Inactivo</option></select></div>
+            <div><p class="block text-sm font-medium">Coordinadores responsables</p><div class="mt-1 space-y-2 rounded border border-slate-300 p-3">@forelse($coordinators as $coordinator)<label class="flex items-center gap-2 text-sm"><input type="checkbox" value="{{ $coordinator->id }}" wire:model="coordinatorIds">{{ $coordinator->display_name }} ({{ $coordinator->username }})</label>@empty<p class="text-sm text-slate-500">No hay coordinadores activos.</p>@endforelse</div><p class="mt-1 text-sm text-red-600">@error('coordinatorIds') {{ $message }} @enderror</p></div>
             <div class="flex gap-3"><button class="rounded bg-sky-700 px-4 py-2 font-medium text-white hover:bg-sky-800" type="submit" wire:loading.attr="disabled">{{ $editingId ? 'Guardar cambios' : 'Crear sector' }}</button>@if ($editingId)<button class="text-sm text-slate-600 hover:underline" wire:click="cancel" type="button">Cancelar</button>@endif</div>
         </form>
     </aside>

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ShiftController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -13,5 +15,16 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/sectors', [CatalogController::class, 'sectors']);
         Route::get('/resources', [CatalogController::class, 'resources']);
+        Route::get('/shifts', [ShiftController::class, 'index']);
+        Route::post('/shifts', [ShiftController::class, 'store']);
+        Route::patch('/shifts/{shift}/status', [ShiftController::class, 'updateStatus']);
+        Route::put('/shifts/{shift}/result', [ShiftController::class, 'storeResult']);
+        Route::get('/reports', [ReportController::class, 'index']);
+        Route::post('/reports', [ReportController::class, 'store']);
+        Route::get('/reports/{report}', [ReportController::class, 'show']);
+        Route::patch('/reports/{report}', [ReportController::class, 'update']);
+        Route::post('/reports/{report}/followups', [ReportController::class, 'storeFollowup']);
+        Route::post('/reports/{report}/evidences', [ReportController::class, 'storeEvidence'])->middleware('throttle:20,1');
+        Route::get('/reports/{report}/evidences/{evidence}/download', [ReportController::class, 'downloadEvidence']);
     });
 });

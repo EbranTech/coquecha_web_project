@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Shift extends Model
 {
@@ -28,5 +29,10 @@ class Shift extends Model
     public function resources(): BelongsToMany
     {
         return $this->belongsToMany(Resource::class, 'shift_resources')->withTimestamps();
+    }
+
+    public function result(): HasOne
+    {
+        return $this->hasOne(ShiftResult::class);
     }
 }

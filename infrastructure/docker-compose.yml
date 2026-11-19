@@ -87,6 +87,10 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
+    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0"
+    environment:
+      DATABASE_URL: mysql://coquechas_next:coquechas_next_local@mariadb:3306/coquechas_agua
+      LARAVEL_INTERNAL_URL: http://laravel-nginx
     volumes:
       - ../dashboard-next:/app
       - next_node_modules:/app/node_modules

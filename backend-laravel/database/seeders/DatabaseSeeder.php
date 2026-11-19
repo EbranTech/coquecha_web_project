@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Person;
+use App\Models\Resource;
 use App\Models\Role;
+use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -47,6 +49,28 @@ class DatabaseSeeder extends Seeder
                     'is_active' => true,
                 ],
             );
+        }
+
+        $sectors = collect([
+            ['name' => 'Sector Norte', 'description' => 'Zona residencial norte.', 'location_description' => 'Peten, Zona Norte'],
+            ['name' => 'Sector Sur', 'description' => 'Zona residencial sur.', 'location_description' => 'Escuintla, Zona Sur'],
+            ['name' => 'Sector Centro', 'description' => 'Zona comercial y comunitaria.', 'location_description' => 'Centro comunitario'],
+        ])->mapWithKeys(fn (array $attributes): array => [
+            $attributes['name'] => Sector::query()->firstOrCreate(['name' => $attributes['name']], [...$attributes, 'status' => 'active']),
+        ]);
+
+        $coordinator = User::query()->where('username', 'coordinador')->firstOrFail();
+        $sectors['Sector Norte']->responsibleUsers()->syncWithoutDetaching([$coordinator->id]);
+        $sectors['Sector Sur']->responsibleUsers()->syncWithoutDetaching([$coordinator->id]);
+
+        $resources = [
+            ['name' => 'Bomba de agua', 'resource_type' => 'Bomba', 'description' => 'Bomba principal de distribución.', 'capacity' => 100, 'capacity_unit' => 'litros/minuto', 'location_description' => 'Caseta Norte'],
+            ['name' => 'Pozo comunitario', 'resource_type' => 'Pozo', 'description' => 'Fuente de agua comunitaria.', 'capacity' => 6000, 'capacity_unit' => 'litros', 'location_description' => 'Finca San Antonio'],
+        ];
+
+        foreach ($resources as $attributes) {
+            $resource = Resource::query()->firstOrCreate(['name' => $attributes['name']], [...$attributes, 'status' => 'available']);
+            $resource->sectors()->syncWithoutDetaching($sectors->pluck('id')->all());
         }
     }
 }

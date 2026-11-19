@@ -19,6 +19,14 @@ Base local: `http://localhost:8080/api/v1`
 | `POST` | `/auth/logout` | `auth:sanctum` | `204 No Content`. |
 | `GET` | `/sectors` | `auth:sanctum` | Sectores con estado `active`, ordenados por nombre. |
 | `GET` | `/resources` | `auth:sanctum` | Recursos; admite filtros opcionales `status` y `type`. |
+| `GET` | `/shifts` | `auth:sanctum` | Turnos; admite `sector_id` y `status`. |
+| `POST` | `/shifts` | Admin/coordinator | Programa un turno y devuelve `409` si existe solapamiento. |
+| `PATCH` | `/shifts/{shift}/status` | Admin/coordinator asignado | Cambia estado respetando transiciones válidas. |
+| `PUT` | `/shifts/{shift}/result` | Admin/coordinator asignado | Registra el volumen de un turno completado. |
+| `GET` | `/reports` | `auth:sanctum` | Listado filtrado por rol y sector. |
+| `POST` | `/reports` | `auth:sanctum` | Crea un reporte propio. |
+| `POST` | `/reports/{report}/followups` | Admin/coordinator asignado | Agrega seguimiento y cambio de estado opcional. |
+| `POST` | `/reports/{report}/evidences` | Autorizado | Sube JPEG, PNG o PDF privado de hasta 5 MB. |
 
 ## Flujo de sesión para React y Next.js
 

@@ -7,12 +7,12 @@ use App\Models\Resource;
 use App\Models\Sector;
 use App\Models\User;
 use App\Services\ShiftConflictService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ShiftConflictTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_a_shift_can_reserve_a_resource_associated_with_its_sector(): void
     {
