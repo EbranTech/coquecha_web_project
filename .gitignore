@@ -20,6 +20,8 @@ backend-laravel/bootstrap/cache/*
 # Docker y herramientas locales
 .docker/
 *.log
+backend-laravel/.claude/
+backend-laravel/.mcp.json
 
 # IDE y sistema operativo
 .idea/

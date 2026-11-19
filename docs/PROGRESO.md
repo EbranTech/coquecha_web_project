@@ -14,10 +14,10 @@
 
 ## Fase 1 — Fundamentos de datos y acceso
 
-- [ ] Modelar las migraciones de `roles`, `people`, `user_accounts`, `sectors` y `resources`.
-- [ ] Configurar el modelo de autenticación, roles y datos semilla iniciales.
-- [ ] Instalar/configurar Sanctum y definir el contrato de API versión 1.
+- [x] Modelar las migraciones de `roles`, `people`, `user_accounts`, `sectors` y `resources`.
+- [x] Configurar el modelo de autenticación, roles y datos semilla iniciales.
+- [x] Instalar/configurar Sanctum y definir el contrato de API versión 1.
 
 ## Próxima acción
 
-Cerrar la Fase 0 con commit y push. Después, comenzar las migraciones y la autenticación de la Fase 1.
+Comenzar la Fase 2: panel administrativo Livewire para administrar sectores y recursos.
