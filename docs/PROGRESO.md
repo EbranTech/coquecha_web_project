@@ -18,6 +18,15 @@
 - [x] Configurar el modelo de autenticación, roles y datos semilla iniciales.
 - [x] Instalar/configurar Sanctum y definir el contrato de API versión 1.
 
+## Fase 2 — Panel administrativo Livewire
+
+- [x] Crear inicio y cierre de sesión web para acceder al panel Laravel.
+- [x] Proteger las rutas y acciones administrativas con autenticación y rol `admin`.
+- [x] Crear el resumen administrativo con métricas de sectores y recursos.
+- [x] Implementar CRUD de sectores mediante Livewire.
+- [x] Implementar CRUD de recursos mediante Livewire.
+- [x] Añadir Vite de Laravel al entorno Docker (`http://localhost:5174`).
+
 ## Próxima acción
 
-Comenzar la Fase 2: panel administrativo Livewire para administrar sectores y recursos.
+Comenzar la Fase 3: API operativa para sectores y recursos, consumida desde React.
