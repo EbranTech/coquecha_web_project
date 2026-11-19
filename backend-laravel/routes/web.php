@@ -16,4 +16,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::livewire('/', 'pages::admin.dashboard')->name('dashboard');
     Route::livewire('/sectores', 'pages::admin.sectors')->name('sectors');
     Route::livewire('/recursos', 'pages::admin.resources')->name('resources');
+    Route::livewire('/turnos', 'pages::admin.shifts')->name('shifts');
 });

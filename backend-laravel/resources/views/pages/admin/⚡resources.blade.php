@@ -2,6 +2,7 @@
 
 use App\Models\Resource as WaterResource;
 use App\Models\Role;
+use App\Models\Sector;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -24,6 +25,9 @@ new #[Title('Administrar recursos')] class extends Component
 
     public string $status = 'available';
 
+    /** @var array<int, int> */
+    public array $sectorIds = [];
+
     public function save(): void
     {
         $this->ensureAdmin();
@@ -36,9 +40,12 @@ new #[Title('Administrar recursos')] class extends Component
             'capacity_unit' => ['nullable', 'string', 'max:30'],
             'location_description' => ['nullable', 'string', 'max:255'],
             'status' => ['required', Rule::in(['available', 'maintenance', 'inactive'])],
+            'sectorIds' => ['required', 'array', 'min:1'],
+            'sectorIds.*' => ['integer', Rule::exists('sectors', 'id')],
         ]);
 
-        WaterResource::query()->updateOrCreate(['id' => $this->editingId], $data);
+        $resource = WaterResource::query()->updateOrCreate(['id' => $this->editingId], collect($data)->except('sectorIds')->all());
+        $resource->sectors()->sync($data['sectorIds']);
         session()->flash('success', $this->editingId ? 'Recurso actualizado.' : 'Recurso creado.');
         $this->resetForm();
     }
@@ -55,6 +62,7 @@ new #[Title('Administrar recursos')] class extends Component
         $this->capacity_unit = $resource->capacity_unit ?? '';
         $this->location_description = $resource->location_description ?? '';
         $this->status = $resource->status;
+        $this->sectorIds = $resource->sectors()->pluck('sectors.id')->all();
     }
 
     public function delete(int $resourceId): void
@@ -75,7 +83,7 @@ new #[Title('Administrar recursos')] class extends Component
 
     private function resetForm(): void
     {
-        $this->reset('editingId', 'name', 'resource_type', 'description', 'capacity', 'capacity_unit', 'location_description');
+        $this->reset('editingId', 'name', 'resource_type', 'description', 'capacity', 'capacity_unit', 'location_description', 'sectorIds');
         $this->status = 'available';
         $this->resetValidation();
     }
@@ -89,6 +97,7 @@ new #[Title('Administrar recursos')] class extends Component
     {
         return $this->view([
             'resources' => WaterResource::query()->orderBy('name')->orderBy('id')->get(),
+            'sectors' => Sector::query()->where('status', 'active')->orderBy('name')->get(),
         ]);
     }
 };
@@ -125,6 +134,7 @@ new #[Title('Administrar recursos')] class extends Component
             <div><label class="block text-sm font-medium">Tipo</label><input class="mt-1 w-full rounded border-slate-300" placeholder="Tanque, bomba, pozo..." wire:model="resource_type"><p class="mt-1 text-sm text-red-600">@error('resource_type') {{ $message }} @enderror</p></div>
             <div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium">Capacidad</label><input class="mt-1 w-full rounded border-slate-300" inputmode="decimal" wire:model="capacity"><p class="mt-1 text-sm text-red-600">@error('capacity') {{ $message }} @enderror</p></div><div><label class="block text-sm font-medium">Unidad</label><input class="mt-1 w-full rounded border-slate-300" placeholder="litros" wire:model="capacity_unit"></div></div>
             <div><label class="block text-sm font-medium">Ubicación</label><input class="mt-1 w-full rounded border-slate-300" wire:model="location_description"><p class="mt-1 text-sm text-red-600">@error('location_description') {{ $message }} @enderror</p></div>
+            <div><label class="block text-sm font-medium">Sectores donde puede utilizarse</label><select class="mt-1 w-full rounded border-slate-300" multiple size="4" wire:model="sectorIds">@foreach ($sectors as $sector)<option value="{{ $sector->id }}">{{ $sector->name }}</option>@endforeach</select><p class="mt-1 text-xs text-slate-500">Usa Ctrl/Cmd para elegir varios sectores.</p><p class="mt-1 text-sm text-red-600">@error('sectorIds') {{ $message }} @enderror @error('sectorIds.*') {{ $message }} @enderror</p></div>
             <div><label class="block text-sm font-medium">Descripción</label><textarea class="mt-1 w-full rounded border-slate-300" rows="2" wire:model="description"></textarea></div>
             <div><label class="block text-sm font-medium">Estado</label><select class="mt-1 w-full rounded border-slate-300" wire:model="status"><option value="available">Disponible</option><option value="maintenance">En mantenimiento</option><option value="inactive">Inactivo</option></select></div>
             <div class="flex gap-3"><button class="rounded bg-sky-700 px-4 py-2 font-medium text-white hover:bg-sky-800" type="submit" wire:loading.attr="disabled">{{ $editingId ? 'Guardar cambios' : 'Crear recurso' }}</button>@if ($editingId)<button class="text-sm text-slate-600 hover:underline" wire:click="cancel" type="button">Cancelar</button>@endif</div>

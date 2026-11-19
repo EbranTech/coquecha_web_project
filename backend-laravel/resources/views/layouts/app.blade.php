@@ -18,6 +18,7 @@
                     <nav class="flex items-center gap-4 text-sm">
                         <a class="hover:text-sky-700" href="{{ route('admin.sectors') }}">Sectores</a>
                         <a class="hover:text-sky-700" href="{{ route('admin.resources') }}">Recursos</a>
+                        <a class="hover:text-sky-700" href="{{ route('admin.shifts') }}">Turnos</a>
                         <span class="hidden text-slate-500 sm:inline">{{ auth()->user()->display_name }}</span>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf

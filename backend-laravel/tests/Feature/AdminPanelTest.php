@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Sector;
 use App\Models\User;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -12,7 +13,6 @@ class AdminPanelTest extends TestCase
     {
         $this->seed();
         $admin = User::query()->where('username', 'admin')->firstOrFail();
-
         $this->withoutVite()->actingAs($admin)->get(route('admin.sectors'))->assertOk();
     }
 
@@ -53,6 +53,7 @@ class AdminPanelTest extends TestCase
     {
         $this->seed();
         $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $sector = Sector::query()->firstOrCreate(['name' => 'Sector para recursos'], ['status' => 'active']);
 
         $this->actingAs($admin);
 
@@ -62,6 +63,7 @@ class AdminPanelTest extends TestCase
             ->set('capacity', '2500')
             ->set('capacity_unit', 'litros')
             ->set('status', 'available')
+            ->set('sectorIds', [$sector->id])
             ->call('save');
 
         $this->assertDatabaseHas('resources', [

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -55,5 +56,10 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->role?->name === $role;
+    }
+
+    public function responsibleShifts(): HasMany
+    {
+        return $this->hasMany(Shift::class, 'responsible_user_id');
     }
 }

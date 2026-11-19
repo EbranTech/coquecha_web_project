@@ -10,7 +10,7 @@
 - [x] Generar `backend-laravel` con Laravel 13 + Livewire.
 - [x] Añadir Dockerfiles y Docker Compose de desarrollo.
 - [x] Configurar MariaDB y Moto Server como servicios locales. Moto emula endpoints S3 sin requerir una licencia de desarrollo.
-- [x] Verificar Laravel (`8080`), React (`5173`), Next.js (`3000`), MariaDB y Moto Server (`5000`).
+- [x] Verificar Laravel (`8080`), React (`5175`), Next.js (`3000`), MariaDB y Moto Server (`5000`).
 
 ## Fase 1 — Fundamentos de datos y acceso
 
@@ -35,6 +35,15 @@
 - [x] Verificar contrato de API, pruebas aisladas y compilación de React.
 - [x] Cerrar la fase con commit y push.
 
+## Fase 4 — Gestión de turnos de distribución
+
+- [x] Relacionar recursos con los sectores donde pueden utilizarse.
+- [x] Modelar turnos, sus recursos asignados y el registro de conflictos.
+- [x] Implementar una transacción que impide reservar un recurso disponible en horarios solapados.
+- [x] Extender el panel de recursos para asociarlos a uno o más sectores.
+- [x] Crear el panel Livewire de turnos: programación, responsable, recursos y cambios de estado.
+- [x] Verificar la reserva válida y el rechazo de solapamientos mediante pruebas automatizadas.
+
 ## Próxima acción
 
-Comenzar la Fase 4: modelado y gestión de turnos de distribución.
+Comenzar la Fase 5: exponer turnos en la API v1 y mostrarlos en React.
