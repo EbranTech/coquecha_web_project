@@ -1,3 +1,14 @@
+FROM node:22-alpine AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+
 FROM composer:2 AS vendor
 
 WORKDIR /app
@@ -12,6 +23,7 @@ RUN composer install \
     --optimize-autoloader
 
 COPY . .
+COPY --from=assets /app/public/build /app/public/build
 
 
 FROM php:8.4-fpm-alpine
