@@ -16,7 +16,7 @@ services:
     networks:
       - coquechas-network
 
-    laravel-nginx:
+  laravel-nginx:
     image: nginx:1.27-alpine
     restart: always
     ports:
