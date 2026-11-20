@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 
 const interruptionSchema = z.object({
   sectorId: z.coerce.number().int().positive(),
+  reportId: z.coerce.number().int().positive().optional(),
   cause: z.string().trim().min(3).max(150),
   description: z.string().trim().max(2000).optional(),
   affectedHouseholds: z.coerce.number().int().min(0).max(1_000_000).optional(),
@@ -28,6 +29,7 @@ export async function createInterruption(formData: FormData): Promise<void> {
   const user = await managerOrRedirect();
   const parsed = interruptionSchema.safeParse({
     sectorId: formData.get("sectorId"), cause: formData.get("cause"),
+    reportId: formData.get("reportId") || undefined,
     description: formData.get("description") || undefined,
     affectedHouseholds: formData.get("affectedHouseholds") || undefined,
     startedAt: formData.get("startedAt"),
@@ -37,8 +39,16 @@ export async function createInterruption(formData: FormData): Promise<void> {
   const allowed = user.role === "admin" || user.sectors.some((sector) => sector.id === parsed.data.sectorId);
   if (!allowed) errorRedirect("No administras el sector seleccionado.");
 
+  if (parsed.data.reportId) {
+    const report = await prisma.reports.findUnique({ where: { id: BigInt(parsed.data.reportId) } });
+    if (!report || report.sector_id !== BigInt(parsed.data.sectorId)) {
+      errorRedirect("El reporte seleccionado no corresponde al sector indicado.");
+    }
+  }
+
   await prisma.service_interruptions.create({ data: {
     sector_id: BigInt(parsed.data.sectorId), created_by_user_id: BigInt(user.id),
+    report_id: parsed.data.reportId ? BigInt(parsed.data.reportId) : null,
     cause: parsed.data.cause, description: parsed.data.description || null,
     affected_households: parsed.data.affectedHouseholds ?? null, started_at: parsed.data.startedAt,
   } });
