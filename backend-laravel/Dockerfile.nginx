@@ -1,0 +1,15 @@
+FROM node:22-alpine AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+
+FROM nginx:1.27-alpine
+
+COPY . /var/www/html
+COPY --from=assets /app/public/build /var/www/html/public/build
