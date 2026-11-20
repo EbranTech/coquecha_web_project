@@ -181,7 +181,7 @@ function App() {
 
   return (
     <main className="page">
-      <header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><nav className="module-nav"><a href="#turnos">Turnos</a><a href="#reportes">Reportes</a>{user.role === 'admin' && <a href="http://localhost:8080/admin">Administración</a>}{canManageShifts && <a href="http://localhost:3000">Indicadores</a>}</nav><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>
+      <header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><nav aria-label="Secciones y módulos" className="module-nav"><a href="#turnos">Turnos</a><a href="#reportes">Reportes</a>{user.role === 'admin' && <a href="http://localhost:8080/admin">Administración</a>}{canManageShifts && <a href="http://localhost:3000">Indicadores</a>}</nav><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>
       {error && <p className="error">{error}</p>}{notice && <p className="notice">{notice}</p>}
       <section className="summary"><article><strong>{sectorList.length}</strong><span>Sectores activos</span></article><article><strong>{resourceList.length}</strong><span>Recursos mostrados</span></article><article><strong>{reportList.length}</strong><span>Reportes visibles</span></article></section>
       <section className="catalog" id="turnos">
