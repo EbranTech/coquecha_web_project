@@ -19,7 +19,7 @@ function parseDate(value: string | undefined, fallback: Date): Date {
 export default async function Home({ searchParams }: HomeProps) {
   const [user, params] = await Promise.all([currentUser(), searchParams]);
   if (!user || !canManageInterruptions(user)) {
-    return <main className="access-message"><p className="eyebrow">COQUECHAS · OPERACIONES</p><h1>Panel de interrupciones</h1><p>Inicia sesión como administrador o coordinador en la aplicación comunitaria para acceder.</p><a href="http://localhost:5175">Ir a la aplicación</a></main>;
+    return <main className="access-message"><p className="eyebrow">COQUECHAS · OPERACIONES</p><h1>Panel de interrupciones</h1><p>Inicia sesión con una cuenta autorizada para acceder.</p><a href="http://localhost:8080/login">Ir al acceso central</a></main>;
   }
 
   const sectors = user.role === "admin"

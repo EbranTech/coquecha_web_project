@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { addFollowup, createReport, createShift, currentUser, login, logout, reports, resources, saveShiftResult, sectors, shifts, updateShift, updateShiftStatus, uploadEvidences } from './api'
+import { addFollowup, createReport, createShift, currentUser, logout, reports, resources, saveShiftResult, sectors, shifts, updateShift, updateShiftStatus, uploadEvidences } from './api'
 import './App.css'
 
 const initialReport = { sector_id: '', category: '', description: '', priority: 'normal' }
@@ -7,8 +7,6 @@ const initialShift = { sector_id: '', starts_at: '', ends_at: '', notes: '', res
 
 function App() {
   const [user, setUser] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
@@ -28,7 +26,10 @@ function App() {
   const [shiftResults, setShiftResults] = useState({})
 
   useEffect(() => {
-    currentUser().then(({ user: activeUser }) => setUser(activeUser)).catch(() => setUser(null)).finally(() => setLoading(false))
+    currentUser()
+      .then(({ user: activeUser }) => setUser(activeUser))
+      .catch(() => window.location.replace('http://localhost:8080/login'))
+      .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -55,21 +56,6 @@ function App() {
       .then((response) => setShiftResourceList(response.data))
       .catch((requestError) => setError(requestError.message))
   }, [shiftForm.sector_id])
-
-  async function handleLogin(event) {
-    event.preventDefault()
-    setLoading(true)
-    setError('')
-    try {
-      const response = await login(username, password)
-      setUser(response.user)
-      setPassword('')
-    } catch (requestError) {
-      setError(requestError.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   async function handleLogout() {
     setError('')
@@ -193,9 +179,7 @@ function App() {
     }
   }
 
-  if (loading && !user) return <main className="page"><p>Cargando plataforma…</p></main>
-
-  if (!user) return <main className="page login-page"><section className="login-card"><p className="eyebrow">Coquechas</p><h1>Consulta comunitaria</h1><p className="intro">Consulta los sectores, recursos y reportes de la comunidad.</p><p className="intro">También puedes usar el <a href="http://localhost:8080/login">acceso central</a>.</p><form onSubmit={handleLogin}><label>Usuario<input value={username} onChange={(event) => setUsername(event.target.value)} required /></label><label>Contraseña<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <p className="error">{error}</p>}<button disabled={loading} type="submit">{loading ? 'Ingresando…' : 'Ingresar'}</button></form></section></main>
+  if (loading || !user) return <main className="page"><p>Validando sesión central…</p></main>
 
   const canManageReports = user.role === 'admin' || user.role === 'coordinator'
   const canManageShifts = user.role === 'admin' || user.role === 'coordinator'

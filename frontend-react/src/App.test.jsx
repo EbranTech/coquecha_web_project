@@ -5,7 +5,7 @@ vi.mock('./api', () => ({
   addFollowup: vi.fn(),
   createReport: vi.fn(),
   createShift: vi.fn(),
-  currentUser: vi.fn(() => Promise.reject(new Error('Unauthenticated'))),
+  currentUser: vi.fn(() => new Promise(() => {})),
   login: vi.fn(),
   logout: vi.fn(),
   reports: vi.fn(),
@@ -21,10 +21,10 @@ vi.mock('./api', () => ({
 import App from './App'
 
 describe('central access', () => {
-  it('shows the central login path when no active session exists', async () => {
+  it('does not render an alternative login form while checking the central session', () => {
     render(<App />)
 
-    expect(await screen.findByRole('link', { name: 'acceso central' }))
-      .toHaveAttribute('href', 'http://localhost:8080/login')
+    expect(screen.getByText('Validando sesión central…')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Usuario')).not.toBeInTheDocument()
   })
 })
