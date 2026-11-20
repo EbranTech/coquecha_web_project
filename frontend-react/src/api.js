@@ -75,6 +75,11 @@ export const createShift = (payload) => request('/shifts', {
   headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
   body: JSON.stringify(payload),
 })
+export const updateShift = (shiftId, payload) => request(`/shifts/${shiftId}`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },
+  body: JSON.stringify(payload),
+})
 export const updateShiftStatus = (shiftId, status) => request(`/shifts/${shiftId}/status`, {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },

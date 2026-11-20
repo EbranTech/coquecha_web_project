@@ -17,6 +17,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/resources', [CatalogController::class, 'resources']);
         Route::get('/shifts', [ShiftController::class, 'index']);
         Route::post('/shifts', [ShiftController::class, 'store']);
+        Route::put('/shifts/{shift}', [ShiftController::class, 'update']);
         Route::patch('/shifts/{shift}/status', [ShiftController::class, 'updateStatus']);
         Route::put('/shifts/{shift}/result', [ShiftController::class, 'storeResult']);
         Route::get('/reports', [ReportController::class, 'index']);

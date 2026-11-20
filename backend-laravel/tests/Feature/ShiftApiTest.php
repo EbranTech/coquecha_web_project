@@ -77,6 +77,46 @@ class ShiftApiTest extends TestCase
             ->assertJsonPath('data.status', 'in_progress');
     }
 
+    public function test_an_assigned_coordinator_can_edit_a_planned_shift(): void
+    {
+        [$sector, $resource] = $this->sectorWithResource();
+        $coordinator = $this->user('coordinador');
+        $sector->responsibleUsers()->attach($coordinator);
+        Sanctum::actingAs($coordinator);
+
+        $shift = $this->postJson('/api/v1/shifts', $this->shiftPayload($sector->id, $resource->id))->json('data');
+
+        $this->putJson("/api/v1/shifts/{$shift['id']}", [
+            ...$this->shiftPayload($sector->id, $resource->id),
+            'starts_at' => '2026-12-01 12:00:00',
+            'ends_at' => '2026-12-01 14:00:00',
+            'notes' => 'Horario actualizado por coordinación.',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.notes', 'Horario actualizado por coordinación.');
+    }
+
+    public function test_editing_a_shift_rejects_a_resource_time_conflict(): void
+    {
+        [$sector, $resource] = $this->sectorWithResource();
+        $admin = $this->user('admin');
+        Sanctum::actingAs($admin);
+
+        $first = $this->postJson('/api/v1/shifts', $this->shiftPayload($sector->id, $resource->id))->json('data');
+        $second = $this->postJson('/api/v1/shifts', [
+            ...$this->shiftPayload($sector->id, $resource->id),
+            'starts_at' => '2026-12-01 12:00:00',
+            'ends_at' => '2026-12-01 14:00:00',
+        ])->json('data');
+
+        $this->putJson("/api/v1/shifts/{$second['id']}", $this->shiftPayload($sector->id, $resource->id))
+            ->assertConflict()
+            ->assertJsonPath('code', 'RESOURCE_TIME_CONFLICT');
+
+        $this->assertDatabaseCount('resource_conflict_logs', 1);
+        $this->assertDatabaseHas('shifts', ['id' => $first['id'], 'starts_at' => '2026-12-01 08:00:00']);
+    }
+
     public function test_an_assigned_coordinator_can_record_the_volume_of_a_completed_shift(): void
     {
         [$sector, $resource] = $this->sectorWithResource();

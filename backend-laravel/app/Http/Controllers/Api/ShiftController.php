@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreShiftRequest;
 use App\Http\Requests\StoreShiftResultRequest;
 use App\Http\Requests\UpdateShiftStatusRequest;
+use App\Http\Requests\UpdateShiftRequest;
 use App\Http\Resources\ShiftResource;
 use App\Models\Role;
 use App\Models\Shift;
@@ -70,6 +71,20 @@ class ShiftController extends Controller
         $shift->update(['status' => $status]);
 
         return new ShiftResource($shift->fresh()->load(['sector', 'resources', 'responsible.person', 'result']));
+    }
+
+    public function update(UpdateShiftRequest $request, Shift $shift, ShiftConflictService $shiftConflictService): ShiftResource
+    {
+        $this->ensureCanManageSector($request->user(), $shift->sector_id);
+        abort_unless(in_array($shift->status, ['planned', 'in_progress'], true), 422, 'Solo se pueden editar turnos planeados o en curso.');
+        $data = $request->validated();
+        $this->ensureCanManageSector($request->user(), (int) $data['sector_id']);
+        return new ShiftResource($shiftConflictService->update(
+            $shift,
+            [...$data, 'responsible_user_id' => $data['responsible_user_id'] ?? null],
+            $data['resource_ids'],
+            $request->user()->id,
+        ));
     }
 
     public function storeResult(StoreShiftResultRequest $request, Shift $shift): ShiftResource
