@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Sector;
+use App\Models\Resource as WaterResource;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -108,5 +109,59 @@ class AdminPanelTest extends TestCase
         $user = User::query()->where('username', 'ana.coordinadora')->firstOrFail();
         $this->assertTrue($user->hasRole('coordinator'));
         $this->assertTrue($user->managedSectors()->whereKey($sector->id)->exists());
+    }
+
+    public function test_an_administrator_can_edit_and_deactivate_a_user(): void
+    {
+        $this->seed();
+        $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $neighbor = User::query()->where('username', 'vecino')->firstOrFail();
+
+        Livewire::actingAs($admin)->test('pages::admin.users')
+            ->call('edit', $neighbor->id)
+            ->set('phone', '5555-0101')
+            ->set('isActive', false)
+            ->call('save');
+
+        $this->assertDatabaseHas('user_accounts', ['id' => $neighbor->id, 'is_active' => false]);
+        $this->assertDatabaseHas('people', ['id' => $neighbor->person_id, 'phone' => '5555-0101', 'status' => 'inactive']);
+    }
+
+    public function test_an_administrator_can_edit_and_delete_an_unused_sector(): void
+    {
+        $this->seed();
+        $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $sector = Sector::query()->create(['name' => 'Sector temporal', 'status' => 'active']);
+
+        Livewire::actingAs($admin)->test('pages::admin.sectors')
+            ->call('edit', $sector->id)
+            ->set('name', 'Sector actualizado')
+            ->set('status', 'inactive')
+            ->call('save');
+
+        $this->assertDatabaseHas('sectors', ['id' => $sector->id, 'name' => 'Sector actualizado', 'status' => 'inactive']);
+
+        Livewire::actingAs($admin)->test('pages::admin.sectors')->call('delete', $sector->id);
+        $this->assertDatabaseMissing('sectors', ['id' => $sector->id]);
+    }
+
+    public function test_an_administrator_can_edit_and_delete_an_unused_resource(): void
+    {
+        $this->seed();
+        $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $sector = Sector::query()->firstOrFail();
+        $resource = WaterResource::query()->create(['name' => 'Recurso temporal', 'resource_type' => 'Bomba', 'capacity' => 100, 'capacity_unit' => 'litros', 'status' => 'available']);
+        $resource->sectors()->attach($sector);
+
+        Livewire::actingAs($admin)->test('pages::admin.resources')
+            ->call('edit', $resource->id)
+            ->set('name', 'Recurso actualizado')
+            ->set('status', 'maintenance')
+            ->call('save');
+
+        $this->assertDatabaseHas('resources', ['id' => $resource->id, 'name' => 'Recurso actualizado', 'status' => 'maintenance']);
+
+        Livewire::actingAs($admin)->test('pages::admin.resources')->call('delete', $resource->id);
+        $this->assertDatabaseMissing('resources', ['id' => $resource->id]);
     }
 }

@@ -44,7 +44,9 @@ new #[Title('Administrar recursos')] class extends Component
             'sectorIds.*' => ['integer', Rule::exists('sectors', 'id')],
         ]);
 
-        $resource = WaterResource::query()->updateOrCreate(['id' => $this->editingId], collect($data)->except('sectorIds')->all());
+        $attributes = collect($data)->except('sectorIds')->all();
+        $attributes['capacity'] = $attributes['capacity'] === '' ? null : $attributes['capacity'];
+        $resource = WaterResource::query()->updateOrCreate(['id' => $this->editingId], $attributes);
         $resource->sectors()->sync($data['sectorIds']);
         session()->flash('success', $this->editingId ? 'Recurso actualizado.' : 'Recurso creado.');
         $this->resetForm();

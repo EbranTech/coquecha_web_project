@@ -53,6 +53,13 @@
 - [x] Mostrar indicadores reales de operación en Next.js.
 - [x] Ejecutar una primera auditoría local de QA.
 
+## Fase 6 — QA final local
+
+- [x] Validar los CRUD administrativos, usuarios y las restricciones por rol.
+- [x] Validar edición de turnos y rechazo de conflictos de recursos.
+- [x] Incorporar prueba de interfaz React y validar builds de React y Next.
+- [x] Verificar los health checks de Laravel y Next en Docker.
+
 ## Próxima acción
 
-Cerrar los pendientes de QA de [AUDITORIA_QA_LOCAL.md](AUDITORIA_QA_LOCAL.md), completar el recorrido manual por rol y preparar las imágenes/Compose de producción antes de AWS.
+Preparar el Compose e imágenes de producción y ejecutar el despliegue AWS según [DESPLIEGUE_AWS.md](DESPLIEGUE_AWS.md). Antes de publicar, queda una aceptación visual final con usuarios reales en los tres roles.
