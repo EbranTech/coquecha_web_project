@@ -11,8 +11,6 @@ services:
     command: php-fpm
     env_file:
       - ../../config/laravel.env
-    volumes:
-      - ../backend-laravel:/var/www/html
     networks:
       - coquechas-network
 
