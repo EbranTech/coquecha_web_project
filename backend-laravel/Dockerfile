@@ -3,6 +3,7 @@ FROM composer:2 AS vendor
 WORKDIR /app
 
 COPY composer.json composer.lock ./
+
 RUN composer install \
     --no-interaction \
     --prefer-dist \
@@ -24,7 +25,13 @@ WORKDIR /var/www/html
 
 COPY --from=vendor /app /var/www/html
 
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN mkdir -p \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 9000
 
