@@ -6,7 +6,9 @@
         <title>Iniciar sesión · Coquechas</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="flex min-h-screen items-center justify-center bg-slate-100 p-4 text-slate-900">
+    <body class="min-h-screen bg-slate-100 text-slate-900">
+        <header class="border-b border-slate-200 bg-white"><div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4"><a class="font-semibold text-sky-800" href="{{ route('login') }}">Coquechas</a><nav class="flex gap-4 text-sm"><a class="text-sky-800 hover:underline" href="http://localhost:5175">Operaciones</a><a class="text-sky-800 hover:underline" href="http://localhost:3000">Indicadores</a></nav></div></header>
+        <div class="flex min-h-[calc(100vh-65px)] items-center justify-center p-4">
         <main class="w-full max-w-md rounded-xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
             <p class="text-sm font-semibold uppercase tracking-widest text-sky-700">Coquechas</p>
             <h1 class="mt-2 text-2xl font-bold">Panel administrativo</h1>
@@ -27,5 +29,6 @@
                 <button class="w-full rounded bg-sky-700 px-4 py-2 font-semibold text-white hover:bg-sky-800" type="submit">Ingresar</button>
             </form>
         </main>
+        </div>
     </body>
 </html>

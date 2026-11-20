@@ -93,4 +93,20 @@ class AdminPanelTest extends TestCase
             'status' => 'available',
         ]);
     }
+
+    public function test_an_administrator_can_create_a_coordinator_and_assign_sectors(): void
+    {
+        $this->seed();
+        $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $sector = Sector::query()->firstOrFail();
+
+        Livewire::actingAs($admin)->test('pages::admin.users')
+            ->set('firstName', 'Ana')->set('lastName', 'Prueba')->set('documentNumber', 'QA-USER-001')
+            ->set('username', 'ana.coordinadora')->set('password', 'password-segura')
+            ->set('roleName', 'coordinator')->set('sectorIds', [$sector->id])->call('save');
+
+        $user = User::query()->where('username', 'ana.coordinadora')->firstOrFail();
+        $this->assertTrue($user->hasRole('coordinator'));
+        $this->assertTrue($user->managedSectors()->whereKey($sector->id)->exists());
+    }
 }

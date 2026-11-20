@@ -41,6 +41,10 @@ new #[Title('Resumen administrativo')] class extends Component
     </div>
 
     <div class="grid gap-4 md:grid-cols-2">
+        <a class="rounded-xl bg-cyan-800 p-6 text-white shadow-md ring-2 ring-cyan-950 hover:bg-cyan-950 focus:outline-none focus:ring-4 focus:ring-cyan-400" href="{{ route('admin.users') }}">
+            <h2 class="text-lg font-semibold">Administrar usuarios</h2>
+            <p class="mt-1 text-sm text-cyan-50">Crear cuentas, roles y asignaciones de sectores.</p>
+        </a>
         <a class="rounded-xl bg-sky-700 p-6 text-white shadow-sm hover:bg-sky-800" href="{{ route('admin.sectors') }}">
             <h2 class="text-lg font-semibold">Administrar sectores</h2>
             <p class="mt-1 text-sm text-sky-100">Crear y actualizar las áreas atendidas.</p>

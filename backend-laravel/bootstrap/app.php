@@ -6,6 +6,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -28,5 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 'code' => 'RESOURCE_TIME_CONFLICT',
                 'resource_ids' => $exception->resourceIds,
             ], 409);
+        });
+        $exceptions->render(function (HttpException $exception, Request $request) {
+            if ($exception->getStatusCode() === 403 && ! $request->expectsJson()) {
+                return response()->view('errors.forbidden', status: 403);
+            }
         });
     })->create();

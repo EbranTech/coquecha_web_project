@@ -29,7 +29,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard'));
+        if ($request->session()->has('url.intended')) {
+            return redirect()->intended(route('admin.dashboard'));
+        }
+
+        return $request->user()->hasRole('admin')
+            ? redirect()->route('admin.dashboard')
+            : redirect()->away('http://localhost:5175');
     }
 
     public function destroy(Request $request): RedirectResponse

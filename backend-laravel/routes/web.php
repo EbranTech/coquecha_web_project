@@ -3,7 +3,7 @@
 use App\Http\Controllers\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/admin');
+Route::redirect('/', '/login');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -17,4 +17,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::livewire('/sectores', 'pages::admin.sectors')->name('sectors');
     Route::livewire('/recursos', 'pages::admin.resources')->name('resources');
     Route::livewire('/turnos', 'pages::admin.shifts')->name('shifts');
+    Route::livewire('/usuarios', 'pages::admin.users')->name('users');
 });

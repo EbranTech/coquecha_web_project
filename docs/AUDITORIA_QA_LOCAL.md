@@ -13,6 +13,8 @@ Fecha: 2026-11-19. Entorno: Docker Compose local, MariaDB y Moto Server.
 | Datos demo | Correcto | Seeder idempotente crea `admin`, `coordinador`, `vecino`, 3 sectores y 2 recursos. |
 | S3 local | Correcto | Moto y la prueba de evidencia PDF privada están cubiertos por Feature tests. |
 
+> Para ejecutar pruebas sin alterar los datos de demostración en MariaDB, usar SQLite en memoria de forma explícita: `docker compose -f infrastructure/docker-compose.yml exec -T -e APP_ENV=testing -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: -e DB_URL= laravel-php php artisan test`.
+
 ## Matriz funcional
 
 | Rol | Funcionalidad | Estado |

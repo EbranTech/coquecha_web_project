@@ -19,6 +19,9 @@
                         <a class="hover:text-sky-700" href="{{ route('admin.sectors') }}">Sectores</a>
                         <a class="hover:text-sky-700" href="{{ route('admin.resources') }}">Recursos</a>
                         <a class="hover:text-sky-700" href="{{ route('admin.shifts') }}">Turnos</a>
+                        <a class="hover:text-sky-700" href="{{ route('admin.users') }}">Usuarios</a>
+                        <a class="hover:text-sky-700" href="http://localhost:5175">Operaciones</a>
+                        <a class="hover:text-sky-700" href="http://localhost:3000">Indicadores</a>
                         <span class="hidden text-slate-500 sm:inline">{{ auth()->user()->display_name }}</span>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
