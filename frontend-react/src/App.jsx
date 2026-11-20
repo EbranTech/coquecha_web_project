@@ -64,12 +64,7 @@ function App() {
     } catch {
       setNotice('La sesión se cerró en esta vista. No fue posible confirmar el cierre con el servidor.')
     } finally {
-      setUser(null)
-      setSectorList([])
-      setResourceList([])
-      setReportList([])
-      setResourceStatus('')
-      setShiftList([])
+      window.location.assign('http://localhost:8080/login')
     }
   }
 
