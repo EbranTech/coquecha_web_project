@@ -21,6 +21,10 @@ RUN apk add --no-cache oniguruma \
     && docker-php-ext-install pdo_mysql mbstring bcmath \
     && apk del .build-deps
 
+RUN apk add --no-cache ca-certificates curl \
+    && curl -fsSL https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+       -o /etc/ssl/certs/rds-global-bundle.pem
+
 WORKDIR /var/www/html
 
 COPY --from=vendor /app /var/www/html
