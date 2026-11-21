@@ -10,6 +10,8 @@ function App() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingData, setLoadingData] = useState(true)
+  const [loadingResources, setLoadingResources] = useState(true)
   const [resourceStatus, setResourceStatus] = useState('')
   const [sectorList, setSectorList] = useState([])
   const [resourceList, setResourceList] = useState([])
@@ -34,17 +36,34 @@ function App() {
 
   useEffect(() => {
     if (!user) return
-    setLoading(true)
-    Promise.all([sectors(), resources({ status: resourceStatus }), reports(), shifts()])
-      .then(([sectorResponse, resourceResponse, reportResponse, shiftResponse]) => {
+    let active = true
+    Promise.all([sectors(), reports(), shifts()])
+      .then(([sectorResponse, reportResponse, shiftResponse]) => {
+        if (!active) return
         setSectorList(sectorResponse.data)
-        setResourceList(resourceResponse.data)
         setReportList(reportResponse.data)
         setShiftList(shiftResponse.data)
       })
-      .catch((requestError) => setError(requestError.message))
-      .finally(() => setLoading(false))
+      .catch((requestError) => { if (active) setError(requestError.message) })
+      .finally(() => { if (active) setLoadingData(false) })
+    return () => { active = false }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    let active = true
+    resources({ status: resourceStatus })
+      .then((response) => { if (active) setResourceList(response.data) })
+      .catch((requestError) => { if (active) setError(requestError.message) })
+      .finally(() => { if (active) setLoadingResources(false) })
+    return () => { active = false }
   }, [user, resourceStatus])
+
+  useEffect(() => {
+    if (!user || loadingData) return
+    const section = window.location.hash.slice(1)
+    if (section) document.getElementById(section)?.scrollIntoView()
+  }, [user, loadingData])
 
   useEffect(() => {
     if (!shiftForm.sector_id) {
@@ -56,6 +75,12 @@ function App() {
       .then((response) => setShiftResourceList(response.data))
       .catch((requestError) => setError(requestError.message))
   }, [shiftForm.sector_id])
+
+  function handleResourceStatusChange(event) {
+    setLoadingResources(true)
+    setError('')
+    setResourceStatus(event.target.value)
+  }
 
   async function handleLogout() {
     setError('')
@@ -182,7 +207,7 @@ function App() {
   return (
     <main className="page">
       <header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><nav aria-label="Secciones y módulos" className="module-nav"><a href="#turnos">Turnos</a><a href="#reportes">Reportes</a>{user.role === 'admin' && <a href="http://localhost:8080/admin">Administración</a>}{canManageShifts && <a href="http://localhost:3000">Indicadores</a>}</nav><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>
-      {error && <p className="error">{error}</p>}{notice && <p className="notice">{notice}</p>}
+      {error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}{loadingData && <p role="status">Cargando información…</p>}
       <section className="summary"><article><strong>{sectorList.length}</strong><span>Sectores activos</span></article><article><strong>{resourceList.length}</strong><span>Recursos mostrados</span></article><article><strong>{reportList.length}</strong><span>Reportes visibles</span></article></section>
       <section className="catalog" id="turnos">
         <div className="section-heading"><div><p className="eyebrow">Distribución</p><h2>{editingShiftId ? 'Editar turno de agua' : 'Turnos de agua'}</h2></div></div>
@@ -195,12 +220,12 @@ function App() {
           <div className="form-actions"><button disabled={submittingShift} type="submit">{submittingShift ? 'Guardando…' : editingShiftId ? 'Guardar cambios' : 'Programar turno'}</button>{editingShiftId && <button className="secondary" onClick={cancelShiftEdit} type="button">Cancelar edición</button>}</div>
         </form>}
         <div className="cards">{shiftList.map((shift) => <article className="card report-card" key={shift.id}><span className={`badge ${shift.status}`}>{shift.status}</span><h3>{shift.sector.name}</h3><p>{new Date(shift.starts_at).toLocaleString()} – {new Date(shift.ends_at).toLocaleTimeString()}</p><small>{shift.resources.map((resource) => resource.name).join(', ') || 'Sin recursos'}</small>{shift.result && <p>Volumen distribuido: {shift.result.delivered_volume} {shift.result.volume_unit}</p>}{canManageShifts && <div className="shift-actions">{shift.status === 'planned' && <><button type="button" onClick={() => startShiftEdit(shift)}>Editar</button><button type="button" onClick={() => handleShiftStatus(shift.id, 'in_progress')}>Iniciar</button><button className="secondary" type="button" onClick={() => handleShiftStatus(shift.id, 'cancelled')}>Cancelar</button></>}{shift.status === 'in_progress' && <button type="button" onClick={() => handleShiftStatus(shift.id, 'completed')}>Completar</button>}{shift.status === 'completed' && !shift.result && <div className="result-form"><input aria-label="Volumen distribuido" type="number" min="0.01" placeholder="Volumen" value={shiftResults[shift.id]?.delivered_volume ?? ''} onChange={(event) => setShiftResults({ ...shiftResults, [shift.id]: { delivered_volume: event.target.value } })} /><button type="button" onClick={() => handleShiftResult(shift.id)}>Guardar volumen</button></div>}</div>}</article>)}</div>
-        {!loading && !shiftList.length && <p className="empty">Aún no hay turnos programados.</p>}
+        {!loadingData && !shiftList.length && <p className="empty">Aún no hay turnos programados.</p>}
       </section>
-      <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Problemas comunitarios</p><h2>Reportar un problema</h2></div></div><form className="report-form" onSubmit={handleReportSubmit}><label>Sector<select value={reportForm.sector_id} onChange={(event) => setReportForm({ ...reportForm, sector_id: event.target.value })} required><option value="">Selecciona un sector</option>{sectorList.map((sector) => <option key={sector.id} value={sector.id}>{sector.name}</option>)}</select></label><label>Tipo de problema<input value={reportForm.category} onChange={(event) => setReportForm({ ...reportForm, category: event.target.value })} maxLength="80" placeholder="Ej. Fuga de agua" required /></label><label>Prioridad<select value={reportForm.priority} onChange={(event) => setReportForm({ ...reportForm, priority: event.target.value })}><option value="low">Baja</option><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label><label className="full-width">Descripción<textarea value={reportForm.description} onChange={(event) => setReportForm({ ...reportForm, description: event.target.value })} minLength="20" maxLength="2000" placeholder="Explica qué sucede y dónde ocurre." required /></label><label className="full-width">Evidencias opcionales (JPEG, PNG o PDF; máximo 5 MB cada una)<input type="file" multiple accept="image/jpeg,image/png,application/pdf" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label><button disabled={submittingReport} type="submit">{submittingReport ? 'Enviando…' : 'Enviar reporte'}</button></form></section>
-      <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Historial</p><h2>Reportes</h2></div></div><div className="cards">{reportList.map((report) => <article className="card report-card" key={report.id}><span className={`badge ${report.status}`}>{report.status}</span><h3>{report.category}</h3><p>{report.description}</p><small>{report.sector.name} · Prioridad: {report.priority}</small>{report.followups?.length > 0 && <div className="followup-list">{report.followups.map((followup) => <p key={followup.id}><strong>{followup.user.name}:</strong> {followup.message}</p>)}</div>}{canManageReports && <div className="followup-form"><textarea value={followups[report.id]?.message ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], message: event.target.value } })} placeholder="Agregar seguimiento" /><select value={followups[report.id]?.new_status ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], new_status: event.target.value } })}><option value="">Sin cambio de estado</option><option value="in_progress">En proceso</option><option value="resolved">Resuelto</option><option value="closed">Cerrado</option></select><button type="button" onClick={() => handleFollowup(report.id)}>Guardar seguimiento</button></div>}</article>)}</div>{!loading && !reportList.length && <p className="empty">Aún no hay reportes para mostrar.</p>}</section>
+      <section className="catalog" id="reportes"><div className="section-heading"><div><p className="eyebrow">Problemas comunitarios</p><h2>Reportar un problema</h2></div></div><form className="report-form" onSubmit={handleReportSubmit}><label>Sector<select value={reportForm.sector_id} onChange={(event) => setReportForm({ ...reportForm, sector_id: event.target.value })} required><option value="">Selecciona un sector</option>{sectorList.map((sector) => <option key={sector.id} value={sector.id}>{sector.name}</option>)}</select></label><label>Tipo de problema<input value={reportForm.category} onChange={(event) => setReportForm({ ...reportForm, category: event.target.value })} maxLength="80" placeholder="Ej. Fuga de agua" required /></label><label>Prioridad<select value={reportForm.priority} onChange={(event) => setReportForm({ ...reportForm, priority: event.target.value })}><option value="low">Baja</option><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label><label className="full-width">Descripción<textarea value={reportForm.description} onChange={(event) => setReportForm({ ...reportForm, description: event.target.value })} minLength="20" maxLength="2000" placeholder="Explica qué sucede y dónde ocurre." required /></label><label className="full-width">Evidencias opcionales (JPEG, PNG o PDF; máximo 5 MB cada una)<input type="file" multiple accept="image/jpeg,image/png,application/pdf" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label><button disabled={submittingReport} type="submit">{submittingReport ? 'Enviando…' : 'Enviar reporte'}</button></form></section>
+      <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Historial</p><h2>Reportes</h2></div></div><div className="cards">{reportList.map((report) => <article className="card report-card" key={report.id}><span className={`badge ${report.status}`}>{report.status}</span><h3>{report.category}</h3><p>{report.description}</p><small>{report.sector.name} · Prioridad: {report.priority}</small>{report.followups?.length > 0 && <div className="followup-list">{report.followups.map((followup) => <p key={followup.id}><strong>{followup.user.name}:</strong> {followup.message}</p>)}</div>}{canManageReports && <div className="followup-form"><textarea value={followups[report.id]?.message ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], message: event.target.value } })} placeholder="Agregar seguimiento" /><select value={followups[report.id]?.new_status ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], new_status: event.target.value } })}><option value="">Sin cambio de estado</option><option value="in_progress">En proceso</option><option value="resolved">Resuelto</option><option value="closed">Cerrado</option></select><button type="button" onClick={() => handleFollowup(report.id)}>Guardar seguimiento</button></div>}</article>)}</div>{!loadingData && !reportList.length && <p className="empty">Aún no hay reportes para mostrar.</p>}</section>
       <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Áreas atendidas</p><h2>Sectores activos</h2></div></div><div className="cards">{sectorList.map((sector) => <article className="card" key={sector.id}><h3>{sector.name}</h3><p>{sector.description || 'Sin descripción adicional.'}</p><small>{sector.location_description || 'Ubicación por definir'}</small></article>)}</div></section>
-      <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Inventario</p><h2>Recursos</h2></div><label className="filter">Estado<select value={resourceStatus} onChange={(event) => setResourceStatus(event.target.value)}><option value="">Todos</option><option value="available">Disponibles</option><option value="maintenance">En mantenimiento</option><option value="inactive">Inactivos</option></select></label></div><div className="cards">{resourceList.map((resource) => <article className="card" key={resource.id}><span className={`badge ${resource.status}`}>{resource.status === 'available' ? 'Disponible' : resource.status === 'maintenance' ? 'Mantenimiento' : 'Inactivo'}</span><h3>{resource.name}</h3><p>{resource.resource_type} · {resource.location_description || 'Ubicación por definir'}</p><small>{resource.capacity ? `${resource.capacity} ${resource.capacity_unit || ''}` : 'Capacidad no registrada'}</small></article>)}</div>{!loading && !resourceList.length && <p className="empty">No hay recursos con este filtro.</p>}</section>
+      <section className="catalog" aria-busy={loadingResources}><div className="section-heading"><div><p className="eyebrow">Inventario</p><h2>Recursos</h2></div><label className="filter">Estado<select value={resourceStatus} onChange={handleResourceStatusChange}><option value="">Todos</option><option value="available">Disponibles</option><option value="maintenance">En mantenimiento</option><option value="inactive">Inactivos</option></select></label></div>{loadingResources && <p role="status">Actualizando recursos…</p>}<div className="cards">{resourceList.map((resource) => <article className="card" key={resource.id}><span className={`badge ${resource.status}`}>{resource.status === 'available' ? 'Disponible' : resource.status === 'maintenance' ? 'Mantenimiento' : 'Inactivo'}</span><h3>{resource.name}</h3><p>{resource.resource_type} · {resource.location_description || 'Ubicación por definir'}</p><small>{resource.capacity ? `${resource.capacity} ${resource.capacity_unit || ''}` : 'Capacidad no registrada'}</small></article>)}</div>{!loadingResources && !resourceList.length && <p className="empty">No hay recursos con este filtro.</p>}</section>
     </main>
   )
 }
