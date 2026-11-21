@@ -7,8 +7,6 @@
         <title>{{ $title ?? config('app.name') }} · Coquechas</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-        @livewireStyles
     </head>
     <body class="min-h-screen bg-slate-100 text-slate-900">
         <header class="border-b border-slate-200 bg-white">
@@ -33,9 +31,7 @@
         </header>
 
         <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-            {{ $slot }}
+            @yield('content')
         </main>
-
-        @livewireScripts
     </body>
 </html>

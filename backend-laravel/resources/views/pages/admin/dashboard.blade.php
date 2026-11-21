@@ -1,23 +1,6 @@
-<?php
+@extends('layouts.app')
 
-use App\Models\Resource;
-use App\Models\Sector;
-use Livewire\Attributes\Title;
-use Livewire\Component;
-
-new #[Title('Resumen administrativo')] class extends Component
-{
-    public function render()
-    {
-        return $this->view([
-            'activeSectors' => Sector::query()->where('status', 'active')->count(),
-            'availableResources' => Resource::query()->where('status', 'available')->count(),
-            'resourcesInMaintenance' => Resource::query()->where('status', 'maintenance')->count(),
-        ]);
-    }
-};
-?>
-
+@section('content')
 <div class="space-y-8">
     <div>
         <p class="text-sm font-medium text-sky-700">Gestión comunitaria del agua</p>
@@ -55,3 +38,4 @@ new #[Title('Resumen administrativo')] class extends Component
         </a>
     </div>
 </div>
+@endsection

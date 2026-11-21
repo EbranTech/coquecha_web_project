@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Sector;
 use App\Models\Resource as WaterResource;
+use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 class AdminPanelTest extends TestCase
@@ -40,15 +39,15 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin);
 
-        Livewire::test('pages::admin.sectors')
-            ->set('name', 'Sector Norte')
-            ->set('description', 'Zona cercana al nacimiento de agua.')
-            ->set('location_description', 'Aldea Coquechas')
-            ->set('status', 'active')
-            ->call('save');
+        $this->actingAs($admin)->post(route('admin.sectors.store'), [
+            'name' => 'Sector de prueba MVC',
+            'description' => 'Zona cercana al nacimiento de agua.',
+            'location_description' => 'Aldea Coquechas',
+            'status' => 'active',
+        ])->assertRedirect(route('admin.sectors'))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('sectors', [
-            'name' => 'Sector Norte',
+            'name' => 'Sector de prueba MVC',
             'status' => 'active',
         ]);
     }
@@ -61,11 +60,11 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin);
 
-        Livewire::test('pages::admin.sectors')
-            ->set('name', 'Sector con responsable')
-            ->set('status', 'active')
-            ->set('coordinatorIds', [$coordinator->id])
-            ->call('save');
+        $this->actingAs($admin)->post(route('admin.sectors.store'), [
+            'name' => 'Sector con responsable',
+            'status' => 'active',
+            'coordinatorIds' => [$coordinator->id],
+        ])->assertRedirect(route('admin.sectors'))->assertSessionHasNoErrors();
 
         $sector = Sector::query()->where('name', 'Sector con responsable')->firstOrFail();
         $this->assertTrue($sector->responsibleUsers()->whereKey($coordinator->id)->exists());
@@ -79,14 +78,14 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin);
 
-        Livewire::test('pages::admin.resources')
-            ->set('name', 'Tanque comunitario')
-            ->set('resource_type', 'Tanque')
-            ->set('capacity', '2500')
-            ->set('capacity_unit', 'litros')
-            ->set('status', 'available')
-            ->set('sectorIds', [$sector->id])
-            ->call('save');
+        $this->actingAs($admin)->post(route('admin.resources.store'), [
+            'name' => 'Tanque comunitario',
+            'resource_type' => 'Tanque',
+            'capacity' => '2500',
+            'capacity_unit' => 'litros',
+            'status' => 'available',
+            'sectorIds' => [$sector->id],
+        ])->assertRedirect(route('admin.resources'))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('resources', [
             'name' => 'Tanque comunitario',
@@ -101,10 +100,16 @@ class AdminPanelTest extends TestCase
         $admin = User::query()->where('username', 'admin')->firstOrFail();
         $sector = Sector::query()->firstOrFail();
 
-        Livewire::actingAs($admin)->test('pages::admin.users')
-            ->set('firstName', 'Ana')->set('lastName', 'Prueba')->set('documentNumber', 'QA-USER-001')
-            ->set('username', 'ana.coordinadora')->set('password', 'password-segura')
-            ->set('roleName', 'coordinator')->set('sectorIds', [$sector->id])->call('save');
+        $this->actingAs($admin)->post(route('admin.users.store'), [
+            'firstName' => 'Ana',
+            'lastName' => 'Prueba',
+            'documentNumber' => 'QA-USER-001',
+            'username' => 'ana.coordinadora',
+            'password' => 'password-segura',
+            'roleName' => 'coordinator',
+            'sectorIds' => [$sector->id],
+            'isActive' => true,
+        ])->assertRedirect(route('admin.users'))->assertSessionHasNoErrors();
 
         $user = User::query()->where('username', 'ana.coordinadora')->firstOrFail();
         $this->assertTrue($user->hasRole('coordinator'));
@@ -117,11 +122,10 @@ class AdminPanelTest extends TestCase
         $admin = User::query()->where('username', 'admin')->firstOrFail();
         $neighbor = User::query()->where('username', 'vecino')->firstOrFail();
 
-        Livewire::actingAs($admin)->test('pages::admin.users')
-            ->call('edit', $neighbor->id)
-            ->set('phone', '5555-0101')
-            ->set('isActive', false)
-            ->call('save');
+        $this->actingAs($admin)->put(route('admin.users.update', $neighbor), [
+            'firstName' => $neighbor->person->first_name, 'lastName' => $neighbor->person->last_name, 'documentNumber' => $neighbor->person->document_number, 'username' => $neighbor->username, 'roleName' => $neighbor->role->name, 'phone' => '5555-0101',
+            'isActive' => false,
+        ])->assertRedirect(route('admin.users'))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('user_accounts', ['id' => $neighbor->id, 'is_active' => false]);
         $this->assertDatabaseHas('people', ['id' => $neighbor->person_id, 'phone' => '5555-0101', 'status' => 'inactive']);
@@ -133,15 +137,14 @@ class AdminPanelTest extends TestCase
         $admin = User::query()->where('username', 'admin')->firstOrFail();
         $sector = Sector::query()->create(['name' => 'Sector temporal', 'status' => 'active']);
 
-        Livewire::actingAs($admin)->test('pages::admin.sectors')
-            ->call('edit', $sector->id)
-            ->set('name', 'Sector actualizado')
-            ->set('status', 'inactive')
-            ->call('save');
+        $this->actingAs($admin)->put(route('admin.sectors.update', $sector), [
+            'name' => 'Sector actualizado',
+            'status' => 'inactive',
+        ])->assertRedirect(route('admin.sectors'))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('sectors', ['id' => $sector->id, 'name' => 'Sector actualizado', 'status' => 'inactive']);
 
-        Livewire::actingAs($admin)->test('pages::admin.sectors')->call('delete', $sector->id);
+        $this->actingAs($admin)->delete(route('admin.sectors.destroy', $sector))->assertRedirect(route('admin.sectors'));
         $this->assertDatabaseMissing('sectors', ['id' => $sector->id]);
     }
 
@@ -153,15 +156,14 @@ class AdminPanelTest extends TestCase
         $resource = WaterResource::query()->create(['name' => 'Recurso temporal', 'resource_type' => 'Bomba', 'capacity' => 100, 'capacity_unit' => 'litros', 'status' => 'available']);
         $resource->sectors()->attach($sector);
 
-        Livewire::actingAs($admin)->test('pages::admin.resources')
-            ->call('edit', $resource->id)
-            ->set('name', 'Recurso actualizado')
-            ->set('status', 'maintenance')
-            ->call('save');
+        $this->actingAs($admin)->put(route('admin.resources.update', $resource), [
+            'resource_type' => $resource->resource_type, 'sectorIds' => [$sector->id], 'name' => 'Recurso actualizado',
+            'status' => 'maintenance',
+        ])->assertRedirect(route('admin.resources'))->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('resources', ['id' => $resource->id, 'name' => 'Recurso actualizado', 'status' => 'maintenance']);
 
-        Livewire::actingAs($admin)->test('pages::admin.resources')->call('delete', $resource->id);
+        $this->actingAs($admin)->delete(route('admin.resources.destroy', $resource))->assertRedirect(route('admin.resources'));
         $this->assertDatabaseMissing('resources', ['id' => $resource->id]);
     }
 }
