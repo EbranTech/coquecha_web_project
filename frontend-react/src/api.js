@@ -1,5 +1,5 @@
 export { login, currentUser, logout } from './api/auth'
 export { sectors } from './api/sectors'
 export { resources } from './api/resources'
-export { reports, createReport, uploadEvidences, addFollowup } from './api/reports'
+export { reports, createReport, uploadEvidences, addFollowup, evidencePreviewUrl } from './api/reports'
 export { shifts, createShift, updateShift, updateShiftStatus, saveShiftResult } from './api/shifts'

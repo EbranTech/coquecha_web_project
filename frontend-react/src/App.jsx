@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { addFollowup, createReport, createShift, currentUser, logout, reports, resources, saveShiftResult, sectors, shifts, updateShift, updateShiftStatus, uploadEvidences } from './api'
+import { addFollowup, createReport, createShift, currentUser, evidencePreviewUrl, logout, reports, resources, saveShiftResult, sectors, shifts, updateShift, updateShiftStatus, uploadEvidences } from './api'
 import { adminUrl, indicatorsUrl, loginUrl } from './config'
 import './App.css'
 
@@ -27,6 +27,14 @@ function App() {
   const [submittingShift, setSubmittingShift] = useState(false)
   const [editingShiftId, setEditingShiftId] = useState(null)
   const [shiftResults, setShiftResults] = useState({})
+  const [evidencePreview, setEvidencePreview] = useState(null)
+
+  useEffect(() => {
+    if (!evidencePreview) return undefined
+    const closeOnEscape = (event) => { if (event.key === 'Escape') setEvidencePreview(null) }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [evidencePreview])
 
   useEffect(() => {
     currentUser()
@@ -129,6 +137,16 @@ function App() {
     }
   }
 
+  async function handleEvidencePreview(reportId, evidence) {
+    setEvidencePreview({ evidence, loading: true, url: '', error: '' })
+    try {
+      const response = await evidencePreviewUrl(reportId, evidence.id)
+      setEvidencePreview((current) => current?.evidence.id === evidence.id ? { ...current, loading: false, url: response.url } : current)
+    } catch (requestError) {
+      setEvidencePreview((current) => current?.evidence.id === evidence.id ? { ...current, loading: false, error: requestError.message } : current)
+    }
+  }
+
   async function handleShiftSubmit(event) {
     event.preventDefault()
     setSubmittingShift(true)
@@ -224,9 +242,10 @@ function App() {
         {!loadingData && !shiftList.length && <p className="empty">Aún no hay turnos programados.</p>}
       </section>
       <section className="catalog" id="reportes"><div className="section-heading"><div><p className="eyebrow">Problemas comunitarios</p><h2>Reportar un problema</h2></div></div><form className="report-form" onSubmit={handleReportSubmit}><label>Sector<select value={reportForm.sector_id} onChange={(event) => setReportForm({ ...reportForm, sector_id: event.target.value })} required><option value="">Selecciona un sector</option>{sectorList.map((sector) => <option key={sector.id} value={sector.id}>{sector.name}</option>)}</select></label><label>Tipo de problema<input value={reportForm.category} onChange={(event) => setReportForm({ ...reportForm, category: event.target.value })} maxLength="80" placeholder="Ej. Fuga de agua" required /></label><label>Prioridad<select value={reportForm.priority} onChange={(event) => setReportForm({ ...reportForm, priority: event.target.value })}><option value="low">Baja</option><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label><label className="full-width">Descripción<textarea value={reportForm.description} onChange={(event) => setReportForm({ ...reportForm, description: event.target.value })} minLength="20" maxLength="2000" placeholder="Explica qué sucede y dónde ocurre." required /></label><label className="full-width">Evidencias opcionales (JPEG, PNG o PDF; máximo 5 MB cada una)<input type="file" multiple accept="image/jpeg,image/png,application/pdf" onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label><button disabled={submittingReport} type="submit">{submittingReport ? 'Enviando…' : 'Enviar reporte'}</button></form></section>
-      <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Historial</p><h2>Reportes</h2></div></div><div className="cards">{reportList.map((report) => <article className="card report-card" key={report.id}><span className={`badge ${report.status}`}>{report.status}</span><h3>{report.category}</h3><p>{report.description}</p><small>{report.sector.name} · Prioridad: {report.priority}</small>{report.followups?.length > 0 && <div className="followup-list">{report.followups.map((followup) => <p key={followup.id}><strong>{followup.user.name}:</strong> {followup.message}</p>)}</div>}{canManageReports && <div className="followup-form"><textarea value={followups[report.id]?.message ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], message: event.target.value } })} placeholder="Agregar seguimiento" /><select value={followups[report.id]?.new_status ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], new_status: event.target.value } })}><option value="">Sin cambio de estado</option><option value="in_progress">En proceso</option><option value="resolved">Resuelto</option><option value="closed">Cerrado</option></select><button type="button" onClick={() => handleFollowup(report.id)}>Guardar seguimiento</button></div>}</article>)}</div>{!loadingData && !reportList.length && <p className="empty">Aún no hay reportes para mostrar.</p>}</section>
+      <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Historial</p><h2>Reportes</h2></div></div><div className="cards">{reportList.map((report) => <article className="card report-card" key={report.id}><span className={`badge ${report.status}`}>{report.status}</span><h3>{report.category}</h3><p>{report.description}</p><small>{report.sector.name} · Prioridad: {report.priority}</small>{report.evidences?.length > 0 && <div className="evidence-list"><h4>Archivos adjuntos</h4>{report.evidences.map((evidence) => <div className="evidence-item" key={evidence.id}><span><strong>{evidence.original_name}</strong><small>{evidence.mime_type === 'application/pdf' ? 'PDF' : 'Imagen'} · {Math.max(1, Math.round(evidence.size_bytes / 1024))} KB</small></span><button type="button" onClick={() => handleEvidencePreview(report.id, evidence)}>Visualizar evidencia</button></div>)}</div>}{report.followups?.length > 0 && <div className="followup-list">{report.followups.map((followup) => <p key={followup.id}><strong>{followup.user.name}:</strong> {followup.message}</p>)}</div>}{canManageReports && <div className="followup-form"><textarea value={followups[report.id]?.message ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], message: event.target.value } })} placeholder="Agregar seguimiento" /><select value={followups[report.id]?.new_status ?? ''} onChange={(event) => setFollowups({ ...followups, [report.id]: { ...followups[report.id], new_status: event.target.value } })}><option value="">Sin cambio de estado</option><option value="in_progress">En proceso</option><option value="resolved">Resuelto</option><option value="closed">Cerrado</option></select><button type="button" onClick={() => handleFollowup(report.id)}>Guardar seguimiento</button></div>}</article>)}</div>{!loadingData && !reportList.length && <p className="empty">Aún no hay reportes para mostrar.</p>}</section>
       <section className="catalog"><div className="section-heading"><div><p className="eyebrow">Áreas atendidas</p><h2>Sectores activos</h2></div></div><div className="cards">{sectorList.map((sector) => <article className="card" key={sector.id}><h3>{sector.name}</h3><p>{sector.description || 'Sin descripción adicional.'}</p><small>{sector.location_description || 'Ubicación por definir'}</small></article>)}</div></section>
       <section className="catalog" aria-busy={loadingResources}><div className="section-heading"><div><p className="eyebrow">Inventario</p><h2>Recursos</h2></div><label className="filter">Estado<select value={resourceStatus} onChange={handleResourceStatusChange}><option value="">Todos</option><option value="available">Disponibles</option><option value="maintenance">En mantenimiento</option><option value="inactive">Inactivos</option></select></label></div>{loadingResources && <p role="status">Actualizando recursos…</p>}<div className="cards">{resourceList.map((resource) => <article className="card" key={resource.id}><span className={`badge ${resource.status}`}>{resource.status === 'available' ? 'Disponible' : resource.status === 'maintenance' ? 'Mantenimiento' : 'Inactivo'}</span><h3>{resource.name}</h3><p>{resource.resource_type} · {resource.location_description || 'Ubicación por definir'}</p><small>{resource.capacity ? `${resource.capacity} ${resource.capacity_unit || ''}` : 'Capacidad no registrada'}</small></article>)}</div>{!loadingResources && !resourceList.length && <p className="empty">No hay recursos con este filtro.</p>}</section>
+      {evidencePreview && <div className="evidence-modal-backdrop" onClick={() => setEvidencePreview(null)}><section aria-label={`Vista previa de ${evidencePreview.evidence.original_name}`} aria-modal="true" className="evidence-modal" onClick={(event) => event.stopPropagation()} role="dialog"><header><div><h2>Vista previa</h2><p>{evidencePreview.evidence.original_name}</p></div><button aria-label="Cerrar vista previa" className="secondary" onClick={() => setEvidencePreview(null)} type="button">Cerrar</button></header>{evidencePreview.loading && <p role="status">Cargando archivo seguro…</p>}{evidencePreview.error && <p className="error" role="alert">{evidencePreview.error} Puedes volver a intentarlo desde el reporte.</p>}{evidencePreview.url && <>{evidencePreview.evidence.mime_type.startsWith('image/') ? <img alt={evidencePreview.evidence.original_name} className="evidence-image-preview" src={evidencePreview.url} /> : evidencePreview.evidence.mime_type === 'application/pdf' ? <iframe className="evidence-pdf-preview" title={`Vista previa de ${evidencePreview.evidence.original_name}`} src={evidencePreview.url} /> : <p className="empty">Este tipo de archivo no se puede previsualizar aquí.</p>}<a className="evidence-open-link" href={evidencePreview.url} rel="noreferrer" target="_blank">Abrir en otra pestaña</a></>}</section></div>}
     </main>
   )
 }

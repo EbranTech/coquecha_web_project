@@ -2,6 +2,9 @@ import { request, xsrfToken } from './client'
 
 export const reports = () => request('/reports')
 
+export const evidencePreviewUrl = (reportId, evidenceId) =>
+  request(`/reports/${reportId}/evidences/${evidenceId}/download`)
+
 export const createReport = (payload) => request('/reports', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() },

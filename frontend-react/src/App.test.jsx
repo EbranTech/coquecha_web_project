@@ -6,6 +6,7 @@ vi.mock('./api', () => ({
   createReport: vi.fn(),
   createShift: vi.fn(),
   currentUser: vi.fn(() => new Promise(() => {})),
+  evidencePreviewUrl: vi.fn(),
   login: vi.fn(),
   logout: vi.fn(),
   reports: vi.fn(),
@@ -125,5 +126,28 @@ describe('updates without replacing the page', () => {
     } finally {
       Element.prototype.scrollIntoView = originalScroll
     }
+  })
+
+  it('requests a private temporary S3 URL and previews report evidence', async () => {
+    api.reports.mockResolvedValue({ data: [{
+      id: 42,
+      category: 'Fuga de agua',
+      description: 'Fuga demo junto a la entrada comunitaria.',
+      status: 'pending',
+      priority: 'normal',
+      sector: { id: 1, name: 'Sector Norte' },
+      followups: [],
+      evidences: [{ id: 7, original_name: 'fuga.jpg', mime_type: 'image/jpeg', size_bytes: 1024 }],
+    }] })
+    api.evidencePreviewUrl.mockResolvedValue({ url: 'https://s3.example.test/temporary-image', expires_at: 'later' })
+    await openApp()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Visualizar evidencia' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Vista previa de fuga.jpg' })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: 'fuga.jpg' })).toHaveAttribute('src', 'https://s3.example.test/temporary-image')
+    expect(api.evidencePreviewUrl).toHaveBeenCalledWith(42, 7)
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar vista previa' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

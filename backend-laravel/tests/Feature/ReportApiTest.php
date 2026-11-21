@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Report;
+use App\Models\ReportEvidence;
 use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -132,6 +133,49 @@ class ReportApiTest extends TestCase
             ->assertJsonPath('message', 'No fue posible guardar la evidencia. Intenta nuevamente más tarde.');
 
         $this->assertDatabaseCount('report_evidences', 0);
+    }
+
+    public function test_an_authorized_user_receives_a_temporary_url_for_report_evidence(): void
+    {
+        Storage::fake('s3');
+        $sector = Sector::query()->create(['name' => 'Sector vista evidencia', 'status' => 'active']);
+        $neighbor = $this->user('vecino');
+        $report = Report::query()->create($this->reportAttributes($sector, $neighbor));
+        $key = "reports/{$report->id}/evidencia.pdf";
+        Storage::disk('s3')->put($key, '%PDF demo');
+        $evidence = ReportEvidence::query()->create([
+            'report_id' => $report->id,
+            'uploaded_by_user_id' => $neighbor->id,
+            'original_name' => 'evidencia.pdf',
+            'storage_key' => $key,
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 9,
+        ]);
+        Sanctum::actingAs($neighbor);
+
+        $this->getJson("/api/v1/reports/{$report->id}/evidences/{$evidence->id}/download")
+            ->assertOk()
+            ->assertJsonStructure(['url', 'expires_at']);
+    }
+
+    public function test_a_user_cannot_get_a_temporary_url_for_another_users_report_evidence(): void
+    {
+        Storage::fake('s3');
+        $sector = Sector::query()->create(['name' => 'Sector evidencia ajena', 'status' => 'active']);
+        $owner = $this->user('vecino');
+        $report = Report::query()->create($this->reportAttributes($sector, $owner));
+        $evidence = ReportEvidence::query()->create([
+            'report_id' => $report->id,
+            'uploaded_by_user_id' => $owner->id,
+            'original_name' => 'privada.png',
+            'storage_key' => "reports/{$report->id}/privada.png",
+            'mime_type' => 'image/png',
+            'size_bytes' => 100,
+        ]);
+        Sanctum::actingAs($this->user('coordinador'));
+
+        $this->getJson("/api/v1/reports/{$report->id}/evidences/{$evidence->id}/download")
+            ->assertForbidden();
     }
 
     private function user(string $username): User

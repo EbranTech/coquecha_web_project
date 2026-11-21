@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\Flysystem\FilesystemException;
@@ -56,7 +57,7 @@ class ReportController extends Controller
 
     public function show(Request $request, Report $report): ReportResource
     {
-        $this->authorize('view', $report);
+        Gate::authorize('view', $report);
 
         return new ReportResource($report->load(['sector', 'creator', 'followups.user', 'evidences']));
     }
@@ -134,7 +135,7 @@ class ReportController extends Controller
 
     public function downloadEvidence(Request $request, Report $report, ReportEvidence $evidence): JsonResponse
     {
-        $this->authorize('view', $report);
+        Gate::authorize('view', $report);
         abort_unless($evidence->report_id === $report->id, 404);
 
         $expiresAt = now()->addMinutes(5);
