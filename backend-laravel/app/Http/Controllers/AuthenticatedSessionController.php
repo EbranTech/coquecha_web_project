@@ -35,7 +35,7 @@ class AuthenticatedSessionController extends Controller
 
         return $request->user()->hasRole('admin')
             ? redirect()->route('admin.dashboard')
-            : redirect()->away('http://localhost:5175');
+            : redirect()->away((string) config('modules.operations_url'));
     }
 
     public function destroy(Request $request): RedirectResponse

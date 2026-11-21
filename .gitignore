@@ -28,3 +28,7 @@ backend-laravel/.mcp.json
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Ignorar variables entorno en el servidor
+infraestructure/config/
+infraestructure/scripts/

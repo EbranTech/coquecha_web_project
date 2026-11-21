@@ -15,7 +15,7 @@
             @if (auth()->user()->hasRole('admin'))
                 <a href="{{ route('admin.dashboard') }}">Ir a mi inicio</a>
             @else
-                <a href="http://localhost:5175">Ir a mi inicio</a>
+                <a href="{{ config('modules.operations_url') }}">Ir a mi inicio</a>
             @endif
             <form method="post" action="{{ route('logout') }}">@csrf<button type="submit">Cerrar sesión</button></form>
         @else

@@ -30,4 +30,6 @@ La arquitectura objetivo, la creación de cada recurso en la consola AWS, las co
 
 El uso de cada módulo, los roles y el recorrido completo de QA están explicados en [docs/MANUAL_FUNCIONAL.md](docs/MANUAL_FUNCIONAL.md).
 
+La explicación técnica integral del código, módulos, API, base de datos, Docker y comandos está en [docs/GUIA_TECNICA_COMPLETA.md](docs/GUIA_TECNICA_COMPLETA.md).
+
 El plan completo de la solución se conserva en el directorio de trabajo padre como `PLAN_IMPLEMENTACION_COQUECHAS.md`; será incorporado a `docs/` antes de iniciar la implementación funcional.

@@ -1,0 +1,99 @@
+
+name: coquechas-agua
+
+services:
+  laravel-php:
+    image: coquechas/laravel-php:${LARAVEL_PHP_TAG:-latest}
+    build:
+      context: ../backend-laravel
+      dockerfile: Dockerfile
+    working_dir: /var/www/html
+    restart: unless-stopped
+    env_file:
+      - ../../config/laravel.env
+    environment:
+      OPERATIONS_URL: ${OPERATIONS_URL:-https://operaciones.coquecha.lat}
+      INDICATORS_URL: ${INDICATORS_URL:-https://panel.coquecha.lat}
+      FRONTEND_REACT_URL: ${FRONTEND_REACT_URL:-https://operaciones.coquecha.lat}
+      DASHBOARD_NEXT_URL: ${DASHBOARD_NEXT_URL:-https://panel.coquecha.lat}
+      SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-operaciones.coquecha.lat,panel.coquecha.lat,app.coquecha.lat,api.coquecha.lat}
+    networks:
+      - coquechas-network
+
+  laravel-nginx:
+    image: coquechas/laravel-nginx:${LARAVEL_NGINX_TAG:-latest}
+    build:
+      context: ../backend-laravel
+      dockerfile: Dockerfile.nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/laravel.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      laravel-php:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    networks:
+      - coquechas-network
+
+  react:
+    image: coquechas/react:${REACT_TAG:-latest}
+    build:
+      context: ../frontend-react
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.coquecha.lat/api/v1}
+        VITE_LOGIN_URL: ${VITE_LOGIN_URL:-https://app.coquecha.lat/login}
+        VITE_ADMIN_URL: ${VITE_ADMIN_URL:-https://app.coquecha.lat/admin}
+        VITE_INDICATORS_URL: ${VITE_INDICATORS_URL:-https://panel.coquecha.lat}
+    restart: unless-stopped
+    ports:
+      - "5175:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    networks:
+      - coquechas-network
+
+  next:
+    image: coquechas/next:${NEXT_TAG:-latest}
+    build:
+      context: ../dashboard-next
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    env_file:
+      - ../../config/next.env
+    environment:
+      DB_SSL: ${DB_SSL:-true}
+      DB_SSL_CA_PATH: /etc/ssl/certs/rds-global-bundle.pem
+      LARAVEL_INTERNAL_URL: http://laravel-nginx
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-https://app.coquecha.lat}
+      PUBLIC_OPERATIONS_URL: ${PUBLIC_OPERATIONS_URL:-https://operaciones.coquecha.lat}
+      PUBLIC_PANEL_URL: ${PUBLIC_PANEL_URL:-https://panel.coquecha.lat}
+    ports:
+      - "3000:3000"
+    depends_on:
+      laravel-nginx:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 8s
+      retries: 6
+      start_period: 20s
+    networks:
+      - coquechas-network
+
+networks:
+  coquechas-network:
+    driver: bridge

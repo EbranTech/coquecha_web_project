@@ -49,6 +49,11 @@ class User extends Authenticatable
         return $this->password_hash;
     }
 
+        public function getAuthPasswordName(): string
+    {
+        return 'password_hash';
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return $this->person?->full_name ?? $this->username;

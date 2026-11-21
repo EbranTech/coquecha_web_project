@@ -21,15 +21,31 @@ class AuthApiTest extends TestCase
     public function test_a_coordinator_is_sent_to_operations_after_central_login(): void
     {
         $this->seed();
+        config(['modules.operations_url' => 'https://operaciones.example.test']);
 
         $this->post(route('login.store'), [
             'username' => 'coordinador',
             'password' => 'password',
-        ])->assertRedirect('http://localhost:5175');
+        ])->assertRedirect('https://operaciones.example.test');
 
         $this->getJson('/api/v1/auth/me')
             ->assertOk()
             ->assertJsonPath('user.username', 'coordinador');
+    }
+
+    public function test_a_neighbor_is_sent_to_operations_after_central_login(): void
+    {
+        $this->seed();
+        config(['modules.operations_url' => 'https://operaciones.example.test']);
+
+        $this->post(route('login.store'), [
+            'username' => 'vecino',
+            'password' => 'password',
+        ])->assertRedirect('https://operaciones.example.test');
+
+        $this->getJson('/api/v1/auth/me')
+            ->assertOk()
+            ->assertJsonPath('user.username', 'vecino');
     }
 
     public function test_an_active_seeded_user_can_log_in(): void

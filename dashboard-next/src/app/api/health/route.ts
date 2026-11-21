@@ -5,7 +5,10 @@ export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     return NextResponse.json({ status: "ok" });
-  } catch {
+  } catch (error) {
+    console.error("Database health check failed", error instanceof Error
+      ? { name: error.name, message: error.message }
+      : { message: "Unknown database error" });
     return NextResponse.json({ status: "unavailable" }, { status: 503 });
   }
 }
