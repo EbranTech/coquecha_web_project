@@ -40,9 +40,9 @@ export async function createInterruption(formData: FormData): Promise<void> {
   if (!allowed) errorRedirect("No administras el sector seleccionado.");
 
   if (parsed.data.reportId) {
-    const report = await prisma.reports.findUnique({ where: { id: BigInt(parsed.data.reportId) } });
-    if (!report || report.sector_id !== BigInt(parsed.data.sectorId)) {
-      errorRedirect("El reporte seleccionado no corresponde al sector indicado.");
+    const report = await prisma.reports.findUnique({ where: { id: BigInt(parsed.data.reportId) }, select: { sector_id: true, status: true } });
+    if (!report || report.sector_id !== BigInt(parsed.data.sectorId) || !["pending", "in_progress"].includes(report.status)) {
+      errorRedirect("Elige un reporte abierto del sector seleccionado o registra la interrupción sin asociar uno.");
     }
   }
 
