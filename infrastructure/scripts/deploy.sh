@@ -101,9 +101,13 @@ initialize_state() {
         container_id="$(compose ps -q "$service" 2>/dev/null || true)"
         if [[ -n "$container_id" ]]; then
             image_id="$(docker inspect --format '{{.Image}}' "$container_id")"
-            docker image tag "$image_id" "coquechas/$service:$fallback_tag"
-            printf '%s\n' "$fallback_tag" >"$file"
-            log "Registrada imagen existente de $service como $fallback_tag."
+            if docker image inspect "$image_id" >/dev/null 2>&1; then
+                docker image tag "$image_id" "coquechas/$service:$fallback_tag"
+                printf '%s\n' "$fallback_tag" >"$file"
+                log "Registrada imagen existente de $service como $fallback_tag."
+            else
+                log "El contenedor de $service no conserva una imagen etiquetable; el primer despliegue no tendrá rollback para este servicio."
+            fi
         fi
     done
 }
