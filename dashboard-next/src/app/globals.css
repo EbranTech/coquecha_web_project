@@ -13,3 +13,34 @@ label { display: grid; gap: .45rem; font-weight: 700; margin-top: 1rem; } input,
 .access-message { max-width: 700px; padding-top: 12vh; } .access-message a { margin-top: 1rem; }
 .history-filter, .pagination { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-bottom: 1rem; }.history-filter label { flex: 1 1 9rem; margin: 0; }.history-filter button { margin: 0; }.pagination { align-items: center; justify-content: space-between; margin-top: 1rem; color: var(--muted); }.pagination a { color: #075d77; font-weight: 800; }
 @media (max-width: 760px) { .dashboard, .access-message { padding-top: 2rem; } .hero, .interruption { flex-direction: column; } .user { white-space: normal; } .metrics, .grid { grid-template-columns: 1fr; } .card { padding: 1.3rem; } }
+/* Mobile-first refinements for compact phones, touch controls, and long content. */
+html { min-width: 320px; scroll-behavior: smooth; }
+body { overflow-x: hidden; }
+button, input, select, textarea, a { touch-action: manipulation; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #0891b2; outline-offset: 2px; }
+.dashboard, .access-message { width: min(100% - 1.5rem, 1180px); }
+.hero { min-width: 0; }
+.module-nav { max-width: 100%; }
+.metrics { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.card, .interruption, .interruption > div { min-width: 0; }
+.interruption p, .interruption h3, .interruption small { overflow-wrap: anywhere; }
+.history-filter { align-items: stretch; }
+.history-filter label { min-width: min(100%, 130px); }
+.history-filter button, button, .access-message a { min-height: 44px; }
+@media (max-width: 420px) {
+  .dashboard, .access-message { width: calc(100% - 1.25rem); padding-top: 1.25rem; }
+  .hero { gap: 1rem; }
+  .user { width: 100%; }
+  .module-nav { display: flex; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding: .35rem; scrollbar-width: thin; }
+  .module-nav a { flex: 0 0 auto; }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+  .metrics article { padding: .85rem; }
+  .metrics strong { font-size: 1.7rem; }
+  .metrics span { font-size: .88rem; }
+  .card { padding: 1rem; }
+  .history-filter { display: grid; grid-template-columns: 1fr 1fr; }
+  .history-filter button { grid-column: 1 / -1; }
+  .interruption form, .interruption form button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }

@@ -208,7 +208,7 @@ function App() {
   return (
     <main className="page">
       <header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><nav aria-label="Secciones y módulos" className="module-nav"><a href="#turnos">Turnos</a><a href="#reportes">Reportes</a>{user.role === 'admin' && <a href={adminUrl}>Administración</a>}{canManageShifts && <a href={indicatorsUrl}>Indicadores</a>}</nav><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>
-      {error && <p className="error">{error}</p>}{notice && <p className="notice">{notice}</p>}
+      {error && <p className="error" role="alert">{error}</p>}{notice && <p className="notice" role="status">{notice}</p>}
       <section className="summary"><article><strong>{sectorList.length}</strong><span>Sectores activos</span></article><article><strong>{resourceList.length}</strong><span>Recursos mostrados</span></article><article><strong>{reportList.length}</strong><span>Reportes visibles</span></article></section>
       <section className="catalog" id="turnos">
         <div className="section-heading"><div><p className="eyebrow">Distribución</p><h2>{editingShiftId ? 'Editar turno de agua' : 'Turnos de agua'}</h2></div></div>

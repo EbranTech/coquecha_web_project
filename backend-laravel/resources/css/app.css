@@ -7,3 +7,35 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer base {
+    html { min-width: 320px; scroll-behavior: smooth; }
+    body { overflow-x: hidden; }
+    button, input, select, textarea, a { touch-action: manipulation; }
+    :focus-visible { outline: 3px solid #0891b2; outline-offset: 2px; }
+    input, select, textarea { max-width: 100%; }
+    table { border-collapse: collapse; }
+}
+
+/* Keep dense admin tables usable on narrow screens without shrinking text. */
+.overflow-hidden:has(> table) { overflow-x: auto; }
+.overflow-hidden:has(> table) table { min-width: 600px; }
+
+@media (max-width: 640px) {
+    main { padding-top: 1.25rem !important; }
+    header > div { align-items: flex-start !important; flex-direction: column !important; gap: .75rem !important; }
+    header nav[aria-label="Módulos y secciones"] { width: 100%; justify-content: flex-start !important; overflow-x: auto; flex-wrap: nowrap !important; scrollbar-width: thin; }
+    header nav[aria-label="Módulos y secciones"] > a { flex: 0 0 auto; min-height: 44px; display: inline-flex; align-items: center; }
+    header nav[aria-label="Módulos y secciones"] form { flex: 0 0 auto; }
+    header nav[aria-label="Módulos y secciones"] button { min-height: 44px; }
+    main .grid { grid-template-columns: minmax(0, 1fr) !important; }
+    main aside { order: -1; }
+    main h1 { font-size: clamp(1.7rem, 8vw, 2.25rem); line-height: 1.15; }
+    main button, main a { min-height: 44px; }
+    main form > div.grid.grid-cols-2 { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
