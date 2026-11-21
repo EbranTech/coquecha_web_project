@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\EvidenceStorageException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReportEvidenceRequest;
 use App\Http\Requests\StoreReportFollowupRequest;
@@ -16,6 +17,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use League\Flysystem\FilesystemException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ReportController extends Controller
 {
@@ -98,7 +101,12 @@ class ReportController extends Controller
                     $filename = Str::uuid().'-'.Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
                     $storageKey = "reports/{$report->id}/{$filename}.{$file->extension()}";
 
-                    Storage::disk('s3')->put($storageKey, $file->getContent(), ['ContentType' => $file->getMimeType()]);
+                    $wasStored = Storage::disk('s3')->put($storageKey, $file->getContent(), ['ContentType' => $file->getMimeType()]);
+
+                    if (! $wasStored) {
+                        throw new EvidenceStorageException('El almacenamiento de evidencias no confirmó la carga del archivo.');
+                    }
+
                     $storedKeys[] = $storageKey;
 
                     return $report->evidences()->create([
@@ -110,8 +118,13 @@ class ReportController extends Controller
                     ]);
                 })->all();
             });
+        } catch (FilesystemException|EvidenceStorageException $exception) {
+            $this->deleteStoredKeys($storedKeys);
+            report($exception);
+
+            throw new HttpException(503, 'No fue posible guardar la evidencia. Intenta nuevamente más tarde.', $exception);
         } catch (\Throwable $exception) {
-            Storage::disk('s3')->delete($storedKeys);
+            $this->deleteStoredKeys($storedKeys);
 
             throw $exception;
         }
@@ -130,5 +143,19 @@ class ReportController extends Controller
             'url' => Storage::disk('s3')->temporaryUrl($evidence->storage_key, $expiresAt),
             'expires_at' => $expiresAt->toISOString(),
         ]);
+    }
+
+    /** @param array<int, string> $storedKeys */
+    private function deleteStoredKeys(array $storedKeys): void
+    {
+        if ($storedKeys === []) {
+            return;
+        }
+
+        try {
+            Storage::disk('s3')->delete($storedKeys);
+        } catch (FilesystemException $exception) {
+            report($exception);
+        }
     }
 }

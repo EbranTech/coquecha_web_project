@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Mockery;
 use Tests\TestCase;
 
 class ReportApiTest extends TestCase
@@ -112,6 +113,25 @@ class ReportApiTest extends TestCase
         ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('files.0');
+    }
+
+    public function test_a_storage_failure_does_not_create_evidence_metadata(): void
+    {
+        $sector = Sector::query()->create(['name' => 'Sector sin almacenamiento', 'status' => 'active']);
+        $neighbor = $this->user('vecino');
+        $report = Report::query()->create($this->reportAttributes($sector, $neighbor));
+        $disk = Mockery::mock();
+        $disk->shouldReceive('put')->once()->andReturnFalse();
+        Storage::shouldReceive('disk')->with('s3')->andReturn($disk);
+        Sanctum::actingAs($neighbor);
+
+        $this->postJson("/api/v1/reports/{$report->id}/evidences", [
+            'files' => [UploadedFile::fake()->create('sin-almacenamiento.pdf', 200, 'application/pdf')],
+        ])
+            ->assertStatus(503)
+            ->assertJsonPath('message', 'No fue posible guardar la evidencia. Intenta nuevamente más tarde.');
+
+        $this->assertDatabaseCount('report_evidences', 0);
     }
 
     private function user(string $username): User
