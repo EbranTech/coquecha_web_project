@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { addFollowup, createReport, createShift, currentUser, logout, reports, resources, saveShiftResult, sectors, shifts, updateShift, updateShiftStatus, uploadEvidences } from './api'
+import { adminUrl, indicatorsUrl, loginUrl } from './config'
 import './App.css'
 
 const initialReport = { sector_id: '', category: '', description: '', priority: 'normal' }
@@ -28,7 +29,7 @@ function App() {
   useEffect(() => {
     currentUser()
       .then(({ user: activeUser }) => setUser(activeUser))
-      .catch(() => window.location.replace('http://localhost:8080/login'))
+      .catch(() => window.location.replace(loginUrl))
       .finally(() => setLoading(false))
   }, [])
 
@@ -64,7 +65,7 @@ function App() {
     } catch {
       setNotice('La sesión se cerró en esta vista. No fue posible confirmar el cierre con el servidor.')
     } finally {
-      window.location.assign('http://localhost:8080/login')
+      window.location.assign(loginUrl)
     }
   }
 
@@ -181,7 +182,7 @@ function App() {
 
   return (
     <main className="page">
-      <header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><nav aria-label="Secciones y módulos" className="module-nav"><a href="#turnos">Turnos</a><a href="#reportes">Reportes</a>{user.role === 'admin' && <a href="http://localhost:8080/admin">Administración</a>}{canManageShifts && <a href="http://localhost:3000">Indicadores</a>}</nav><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>
+      <header className="topbar"><div><p className="eyebrow">Coquechas</p><h1>Recursos comunitarios</h1></div><div className="user-actions"><nav aria-label="Secciones y módulos" className="module-nav"><a href="#turnos">Turnos</a><a href="#reportes">Reportes</a>{user.role === 'admin' && <a href={adminUrl}>Administración</a>}{canManageShifts && <a href={indicatorsUrl}>Indicadores</a>}</nav><span>{user.name} · {user.role}</span><button className="secondary" onClick={handleLogout} type="button">Salir</button></div></header>
       {error && <p className="error">{error}</p>}{notice && <p className="notice">{notice}</p>}
       <section className="summary"><article><strong>{sectorList.length}</strong><span>Sectores activos</span></article><article><strong>{resourceList.length}</strong><span>Recursos mostrados</span></article><article><strong>{reportList.length}</strong><span>Reportes visibles</span></article></section>
       <section className="catalog" id="turnos">

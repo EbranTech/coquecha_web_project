@@ -3,7 +3,12 @@ import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react],
+  plugins: [react()],
+
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+  },
 
   server: {
     host: '0.0.0.0',

@@ -1,4 +1,5 @@
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1'
+import { apiUrl } from './config'
+
 const backendUrl = apiUrl.replace(/\/api\/v1$/, '')
 
 function xsrfToken() {
@@ -20,7 +21,7 @@ async function request(path, options = {}) {
       ...options,
     })
   } catch {
-    throw new Error('No fue posible comunicarse con el servidor. Verifica que Laravel esté activo en http://localhost:8080.')
+    throw new Error(`No fue posible comunicarse con el servidor en ${backendUrl}.`)
   }
 
   if (!response.ok) {

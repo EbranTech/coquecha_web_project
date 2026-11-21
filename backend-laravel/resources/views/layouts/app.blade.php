@@ -20,8 +20,8 @@
                         <a class="rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-white hover:text-sky-800" href="{{ route('admin.resources') }}">Recursos</a>
                         <a class="rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-white hover:text-sky-800" href="{{ route('admin.shifts') }}">Turnos</a>
                         <a class="rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-white hover:text-sky-800" href="{{ route('admin.users') }}">Usuarios</a>
-                        <a class="rounded-lg bg-sky-700 px-3 py-2 font-semibold text-white hover:bg-sky-800" href="http://localhost:5175">Operaciones</a>
-                        <a class="rounded-lg bg-cyan-800 px-3 py-2 font-semibold text-white hover:bg-cyan-900" href="http://localhost:3000">Indicadores</a>
+                        <a class="rounded-lg bg-sky-700 px-3 py-2 font-semibold text-white hover:bg-sky-800" href="{{ config('modules.operations_url') }}">Operaciones</a>
+                        <a class="rounded-lg bg-cyan-800 px-3 py-2 font-semibold text-white hover:bg-cyan-900" href="{{ config('modules.indicators_url') }}">Indicadores</a>
                         <span class="hidden text-slate-500 sm:inline">{{ auth()->user()->display_name }}</span>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
