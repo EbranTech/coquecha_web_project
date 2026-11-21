@@ -39,19 +39,26 @@ export async function createInterruption(formData: FormData): Promise<void> {
   const allowed = user.role === "admin" || user.sectors.some((sector) => sector.id === parsed.data.sectorId);
   if (!allowed) errorRedirect("No administras el sector seleccionado.");
 
-  if (parsed.data.reportId) {
-    const report = await prisma.reports.findUnique({ where: { id: BigInt(parsed.data.reportId) }, select: { sector_id: true, status: true } });
-    if (!report || report.sector_id !== BigInt(parsed.data.sectorId) || !["pending", "in_progress"].includes(report.status)) {
-      errorRedirect("Elige un reporte abierto del sector seleccionado o registra la interrupción sin asociar uno.");
-    }
-  }
+  await prisma.$transaction(async (transaction) => {
+    const reportId = parsed.data.reportId ? BigInt(parsed.data.reportId) : null;
 
-  await prisma.service_interruptions.create({ data: {
-    sector_id: BigInt(parsed.data.sectorId), created_by_user_id: BigInt(user.id),
-    report_id: parsed.data.reportId ? BigInt(parsed.data.reportId) : null,
-    cause: parsed.data.cause, description: parsed.data.description || null,
-    affected_households: parsed.data.affectedHouseholds ?? null, started_at: parsed.data.startedAt,
-  } });
+    if (reportId) {
+      const updated = await transaction.reports.updateMany({
+        where: { id: reportId, sector_id: BigInt(parsed.data.sectorId), status: { in: ["pending", "in_progress"] } },
+        data: { status: "in_progress", resolved_at: null },
+      });
+      if (updated.count !== 1) {
+        errorRedirect("Elige un reporte abierto del sector seleccionado o registra la interrupción sin asociar uno.");
+      }
+    }
+
+    await transaction.service_interruptions.create({ data: {
+      sector_id: BigInt(parsed.data.sectorId), created_by_user_id: BigInt(user.id),
+      report_id: reportId,
+      cause: parsed.data.cause, description: parsed.data.description || null,
+      affected_households: parsed.data.affectedHouseholds ?? null, started_at: parsed.data.startedAt,
+    } });
+  });
   revalidatePath("/");
   redirect("/?success=Interrupción registrada correctamente.");
 }
@@ -60,12 +67,32 @@ export async function restoreInterruption(formData: FormData): Promise<void> {
   const user = await managerOrRedirect();
   const id = z.coerce.number().int().positive().safeParse(formData.get("id"));
   if (!id.success) errorRedirect("La interrupción indicada no es válida.");
-  const interruption = await prisma.service_interruptions.findUnique({ where: { id: BigInt(id.data) } });
-  if (!interruption || interruption.restored_at) errorRedirect("La interrupción ya no está activa.");
+  await prisma.$transaction(async (transaction) => {
+    const interruption = await transaction.service_interruptions.findUnique({ where: { id: BigInt(id.data) } });
+    if (!interruption || interruption.restored_at) errorRedirect("La interrupción ya no está activa.");
 
-  const allowed = user.role === "admin" || user.sectors.some((sector) => BigInt(sector.id) === interruption.sector_id);
-  if (!allowed) errorRedirect("No administras el sector de esta interrupción.");
-  await prisma.service_interruptions.update({ where: { id: interruption.id }, data: { restored_at: new Date() } });
+    const allowed = user.role === "admin" || user.sectors.some((sector) => BigInt(sector.id) === interruption.sector_id);
+    if (!allowed) errorRedirect("No administras el sector de esta interrupción.");
+
+    const restoredAt = new Date();
+    const updated = await transaction.service_interruptions.updateMany({
+      where: { id: interruption.id, restored_at: null },
+      data: { restored_at: restoredAt },
+    });
+    if (updated.count !== 1) errorRedirect("La interrupción ya no está activa.");
+
+    if (interruption.report_id !== null) {
+      const otherActiveInterruptions = await transaction.service_interruptions.count({
+        where: { report_id: interruption.report_id, restored_at: null },
+      });
+      if (otherActiveInterruptions === 0) {
+        await transaction.reports.updateMany({
+          where: { id: interruption.report_id, status: "in_progress" },
+          data: { status: "resolved", resolved_at: restoredAt },
+        });
+      }
+    }
+  });
   revalidatePath("/");
-  redirect("/?success=Servicio marcado como restablecido.");
+  redirect("/?success=Servicio restablecido; el reporte asociado quedó resuelto.");
 }

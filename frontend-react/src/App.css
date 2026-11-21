@@ -19,6 +19,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @media (max-width: 620px) { .evidence-modal-backdrop { align-items: end; padding: 0; }.evidence-modal { width: 100%; max-height: 94dvh; padding: 14px; border-radius: 16px 16px 0 0; }.evidence-item { align-items: stretch; flex-direction: column; }.evidence-item button { width: 100%; min-height: 44px; }.evidence-pdf-preview { min-height: 65dvh; }.evidence-image-preview { max-height: 66dvh; } }
 .result-form { display: flex; gap: 8px; width: 100%; }.result-form input { max-width: 150px; }
 .form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }.form-actions button { margin: 0; }
+.report-status { display: inline-flex; justify-self: start; align-items: center; gap: 8px; width: max-content; max-width: 100%; margin: 0; padding: 7px 11px; border: 1px solid transparent; border-radius: 999px; font-size: .8rem; font-weight: 800; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; }
+.report-status .status-indicator { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: currentColor; }
+.status-pending { color: #805000; background: #fff3d6; border-color: #f2d28c; }
+.status-in_progress { color: #174f83; background: #e4f0ff; border-color: #b7d5f5; }
+.status-resolved { color: #176243; background: #e0f5e9; border-color: #b2e2c6; }
+.status-closed { color: #4b5563; background: #edf0f3; border-color: #d4dbe2; }
 
 html { scroll-behavior: smooth; }
 .catalog { scroll-margin-top: 24px; }

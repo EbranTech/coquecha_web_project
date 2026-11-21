@@ -142,6 +142,7 @@ describe('updates without replacing the page', () => {
     api.evidencePreviewUrl.mockResolvedValue({ url: 'https://s3.example.test/temporary-image', expires_at: 'later' })
     await openApp()
 
+    expect(screen.getByLabelText('Estado: Pendiente')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Visualizar evidencia' }))
 
     expect(await screen.findByRole('dialog', { name: 'Vista previa de fuga.jpg' })).toBeInTheDocument()
