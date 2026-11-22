@@ -16,8 +16,6 @@
 @endphp
 
 <div class="space-y-6">
-
-    <!-- ENCABEZADO -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <p class="text-sm font-semibold text-sky-700">
@@ -46,8 +44,6 @@
             </button>
         @endif
     </div>
-
-    <!-- MENSAJES -->
     @if (session('success'))
         <div role="status"
              class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
@@ -61,8 +57,6 @@
             {{ session('error') }}
         </div>
     @endif
-
-    <!-- ESTADÍSTICAS -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">Total recursos</p>
@@ -92,8 +86,6 @@
             </p>
         </div>
     </div>
-
-    <!-- TABLA -->
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         <div class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
@@ -216,7 +208,6 @@
     </div>
 </div>
 
-<!-- PANEL LATERAL -->
 <div id="resourcePanel"
      class="fixed inset-0 z-[100] hidden"
      role="dialog"
@@ -229,7 +220,6 @@
 
     <aside class="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col bg-white shadow-2xl">
 
-        <!-- CABECERA -->
         <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
             <div>
                 <h2 id="resourcePanelTitle" class="text-xl font-bold text-slate-900">
@@ -248,7 +238,6 @@
             </button>
         </div>
 
-        <!-- FORMULARIO -->
         <form id="resourceForm"
               method="POST"
               action="{{ $isEditing ? route('admin.resources.update', $editingId) : route('admin.resources.store') }}"
@@ -261,7 +250,6 @@
 
             <div class="flex-1 space-y-5 overflow-y-auto px-6 py-6">
 
-                <!-- NOMBRE -->
                 <div>
                     <label for="resource_name" class="{{ $labelClass }}">
                         Nombre del recurso
@@ -280,7 +268,6 @@
                     @enderror
                 </div>
 
-                <!-- TIPO -->
                 <div>
                     <label for="resource_type" class="{{ $labelClass }}">
                         Tipo de recurso
@@ -299,7 +286,6 @@
                     @enderror
                 </div>
 
-                <!-- CAPACIDAD -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="capacity" class="{{ $labelClass }}">
@@ -338,7 +324,6 @@
                     </div>
                 </div>
 
-                <!-- UBICACIÓN -->
                 <div>
                     <label for="resource_location" class="{{ $labelClass }}">
                         Ubicación
@@ -356,7 +341,6 @@
                     @enderror
                 </div>
 
-                <!-- SECTORES -->
                 <div>
                     <label class="{{ $labelClass }}">
                         Sectores donde puede utilizarse
@@ -394,8 +378,6 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <!-- DESCRIPCIÓN -->
                 <div>
                     <label for="resource_description" class="{{ $labelClass }}">
                         Descripción
@@ -411,8 +393,6 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <!-- ESTADO -->
                 <div>
                     <label for="resource_status" class="{{ $labelClass }}">
                         Estado operativo
@@ -439,7 +419,6 @@
                 </div>
             </div>
 
-            <!-- ACCIONES -->
             <div class="flex gap-3 border-t border-slate-200 bg-white px-6 py-5">
                 @if ($isEditing)
                     <a href="{{ route('admin.resources') }}"
@@ -483,13 +462,11 @@
     }
 
     function closeResourcePanel() {
-        // Si estamos editando, volver al listado.
         if (resourceIsEditing) {
             window.location.href = resourceIndexUrl;
             return;
         }
 
-        // Si estamos creando, cerrar y limpiar.
         resourcePanel.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
 
@@ -516,7 +493,6 @@
         }
     });
 
-    // BÚSQUEDA LOCAL
     resourceSearch?.addEventListener('input', function () {
         const query = this.value.toLowerCase().trim();
 
@@ -528,7 +504,6 @@
         });
     });
 
-    // ABRIR EN EDICIÓN O TRAS ERROR DE VALIDACIÓN
     @if ($isEditing || $hasErrors)
         document.addEventListener('DOMContentLoaded', openResourcePanel);
     @endif

@@ -16,7 +16,6 @@
 
 <div class="space-y-6">
 
-    <!-- ENCABEZADO -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <p class="text-sm font-semibold text-sky-700">
@@ -46,7 +45,6 @@
         @endif
     </div>
 
-    <!-- MENSAJES -->
     @if (session('success'))
         <div role="status"
              class="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800">
@@ -61,7 +59,6 @@
         </div>
     @endif
 
-    <!-- ESTADÍSTICAS -->
     <div class="grid gap-4 sm:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">Total sectores</p>
@@ -85,7 +82,6 @@
         </div>
     </div>
 
-    <!-- TABLA -->
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         <div class="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
@@ -192,21 +188,18 @@
     </div>
 </div>
 
-<!-- PANEL LATERAL -->
 <div id="sectorPanel"
      class="fixed inset-0 z-[100] hidden"
      role="dialog"
      aria-modal="true"
      aria-labelledby="sectorPanelTitle">
 
-    <!-- FONDO -->
     <div onclick="closeSectorPanel()"
          class="absolute inset-0 bg-slate-950/50 backdrop-blur-sm">
     </div>
 
     <aside class="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col bg-white shadow-2xl">
 
-        <!-- CABECERA -->
         <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
             <div>
                 <h2 id="sectorPanelTitle" class="text-xl font-bold text-slate-900">
@@ -225,7 +218,6 @@
             </button>
         </div>
 
-        <!-- FORMULARIO -->
         <form id="sectorForm"
               method="POST"
               action="{{ $isEditing ? route('admin.sectors.update', $editingId) : route('admin.sectors.store') }}"
@@ -237,8 +229,6 @@
             @endif
 
             <div class="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-
-                <!-- NOMBRE -->
                 <div>
                     <label for="sector_name" class="{{ $labelClass }}">
                         Nombre del sector
@@ -256,8 +246,6 @@
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <!-- DESCRIPCIÓN -->
                 <div>
                     <label for="sector_description" class="{{ $labelClass }}">
                         Descripción
@@ -274,7 +262,6 @@
                     @enderror
                 </div>
 
-                <!-- UBICACIÓN -->
                 <div>
                     <label for="sector_location" class="{{ $labelClass }}">
                         Ubicación
@@ -292,7 +279,6 @@
                     @enderror
                 </div>
 
-                <!-- ESTADO -->
                 <div>
                     <label for="sector_status" class="{{ $labelClass }}">
                         Estado
@@ -312,7 +298,6 @@
                     </select>
                 </div>
 
-                <!-- COORDINADORES -->
                 <div>
                     <label class="{{ $labelClass }}">
                         Coordinadores responsables
@@ -357,7 +342,6 @@
                 </div>
             </div>
 
-            <!-- ACCIONES -->
             <div class="flex gap-3 border-t border-slate-200 bg-white px-6 py-5">
                 @if ($isEditing)
                     <a href="{{ route('admin.sectors') }}"
@@ -401,17 +385,14 @@
     }
 
     function closeSectorPanel() {
-        // Si estamos editando, regresar al listado.
         if (sectorIsEditing) {
             window.location.href = sectorIndexUrl;
             return;
         }
 
-        // Si estamos creando, cerrar y limpiar.
         sectorPanel.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
 
-        // Limpiar también valores recuperados por old().
         sectorForm.reset();
 
         sectorForm.querySelectorAll('input:not([type="hidden"]), textarea').forEach(field => {
@@ -435,7 +416,6 @@
         }
     });
 
-    // BUSCADOR
     sectorSearch?.addEventListener('input', function () {
         const query = this.value.toLowerCase().trim();
 
@@ -447,7 +427,6 @@
         });
     });
 
-    // ABRIR AL EDITAR O TRAS ERROR DE VALIDACIÓN
     @if ($isEditing || $hasErrors)
         document.addEventListener('DOMContentLoaded', openSectorPanel);
     @endif
