@@ -4,9 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Iniciar sesión · Coquechas</title>
-        <p class="mt-2 text-xs text-slate-400">
-        Servidor: {{ config('app.server_number', 'No definido') }}
-        </p>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen bg-slate-100 text-slate-900">
@@ -15,6 +12,9 @@
             <p class="text-sm font-semibold uppercase tracking-widest text-sky-700">Coquechas</p>
             <h1 class="mt-2 text-2xl font-bold">Iniciar sesión</h1>
             <p class="mt-2 text-sm text-slate-600">Accede a los módulos habilitados para tu cuenta.</p>
+             <p class="mt-2 text-xs text-slate-400">
+            Servidor: {{ config('app.server_number', 'No definido') }}
+            </p>
 
             <form class="mt-6 space-y-4" action="{{ route('login.store') }}" method="POST">
                 @csrf
